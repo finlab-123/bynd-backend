@@ -1,4 +1,4 @@
-import { CeoAction } from '../model/Ceomodel.js';
+import { CeoAction } from '../model/CeoModel.js';
 import { Userschema } from '../model/Authmodel.js';
 
 // 1. Fetch live metrics from data tables for the CEO workspace
