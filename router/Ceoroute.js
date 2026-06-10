@@ -4,7 +4,7 @@ import {
     getCeoDashboardStats, 
     createCeoDirective, 
     getCeoDirectives 
-} from '../controller/Ceocontroller.js';
+} from '../controller/CeoController.js';
 
 export const ceorouter = express.Router();
 
