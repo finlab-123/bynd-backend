@@ -139,87 +139,157 @@ export const getModelsForEmployee = (user) => {
 };
 
 /**
- * Automated assignment routing processor
+ * Automated assignment routing processor based on the round-robin
+ * //TODO: Implement the round-robin assignment logic
  */
+// export const assignLeadByCategory = async (lead) => {
+//   console.log("\n=============================================");
+//   console.log("🚀 [AUTO-ASSIGN SYSTEM] Function triggered!");
+
+//   if (!lead.productCategory && lead.schema && lead.schema.paths.productCategory) {
+//     lead.productCategory = lead.schema.paths.productCategory.options.default;
+//     console.log("ℹ️ productCategory was missing. Fetched schema default:", lead.productCategory);
+//   }
+
+//   if (!lead || !lead.productCategory) {
+//     console.log("❌ CRITICAL: Exiting assignment immediately because productCategory is completely missing!");
+//     console.log("=============================================\n");
+//     return lead;
+//   }
+
+//   const cleanCategory = lead.productCategory.toLowerCase().trim();
+//   const hyphenated = cleanCategory.replace(/\s+/g, '-');
+//   const spaced = cleanCategory.replace(/-+/g, ' ');
+  
+//   console.log(`🔍 Searching teamAssign collection matching parameters: ["${hyphenated}", "${spaced}", "${cleanCategory}"]`);
+
+//   try {
+//     // 1. Precise check mapping across Array storage fields 
+//     let candidates = await TeamAssignModel.find({
+//       status: 'Active',
+//       $or: [
+//         { specialization: { $in: [hyphenated, spaced, cleanCategory] } },
+//         { specialization: hyphenated },
+//         { specialization: spaced }
+//       ]
+//     }).sort({ leadCount: 1 });
+
+//     console.log(`📊 Query Result: Found ${candidates.length} specialized agent(s).`);
+
+//     // 2. Loose Regex search fallback
+//     if (!candidates.length) {
+//       console.log("⚠️ No direct match found. Running case-insensitive loose regex fallback search...");
+//       candidates = await TeamAssignModel.find({
+//         specialization: { $regex: new RegExp(lead.productCategory.trim(), 'i') },
+//         status: 'Active'
+//       }).sort({ leadCount: 1 });
+//       console.log(`📊 Regex Fallback Result: Found ${candidates.length} agent(s).`);
+//     }
+
+//     // 3. Round-robin Fallback (any active team member)
+//     let assignee = candidates[0];
+//     if (!assignee) {
+//       console.log("⚠️ No matching specialized agents. Falling back to fetching ANY active team assignment profile...");
+//       assignee = await TeamAssignModel.findOne({ status: 'Active' }).sort({ leadCount: 1 });
+//     }
+
+//     if (assignee) {
+//       console.log("🎯 SUCCESS! Assigned lead to Employee:", assignee.fullname);
+//       console.log("🆔 Target Employee Team Record ID (_id):", assignee._id.toString());
+//       console.log("🆔 Target Employee Auth Link ID (userId):", assignee.userId ? assignee.userId.toString() : "MISSING");
+
+//       // Increment lead count tracker inside team database record
+//       await TeamAssignModel.findByIdAndUpdate(assignee._id, { $inc: { leadCount: 1 } });
+//       console.log(`📈 Incremented leadCount counter for ${assignee.fullname}`);
+
+//       // Apply unified string stamps to preserve dashboard querying compatibility
+//       lead.assignedTo = assignee.userId ? assignee.userId.toString() : assignee._id.toString();
+//       lead.assignmentStatus = 'Assigned';
+      
+//       console.log("📝 Stamped lead.assignedTo with:", lead.assignedTo);
+//     } else {
+//       console.log("❌ ALL SELECTION METHODS FAILED: The teamAssign collection contains 0 active documents!");
+//       lead.assignmentStatus = 'Unassigned';
+//     }
+
+//     console.log("=============================================\n");
+//     return lead;
+//   } catch (err) {
+//     console.error('❌ EXCEPTION ERROR inside assignLeadByCategory:', err);
+//     console.log("=============================================\n");
+//     return lead;
+//   }
+// };
+
+// for broadcart level assign the lead to all the employee with the same catgeory
+
 export const assignLeadByCategory = async (lead) => {
   console.log("\n=============================================");
-  console.log("🚀 [AUTO-ASSIGN SYSTEM] Function triggered!");
+  console.log("🚀 [BROADCAST ASSIGN SYSTEM] Function triggered!");
 
   if (!lead.productCategory && lead.schema && lead.schema.paths.productCategory) {
     lead.productCategory = lead.schema.paths.productCategory.options.default;
-    console.log("ℹ️ productCategory was missing. Fetched schema default:", lead.productCategory);
   }
 
   if (!lead || !lead.productCategory) {
-    console.log("❌ CRITICAL: Exiting assignment immediately because productCategory is completely missing!");
-    console.log("=============================================\n");
+    console.log("❌ CRITICAL: productCategory is missing!");
     return lead;
   }
 
   const cleanCategory = lead.productCategory.toLowerCase().trim();
   const hyphenated = cleanCategory.replace(/\s+/g, '-');
   const spaced = cleanCategory.replace(/-+/g, ' ');
-  
-  console.log(`🔍 Searching teamAssign collection matching parameters: ["${hyphenated}", "${spaced}", "${cleanCategory}"]`);
 
   try {
-    // 1. Precise check mapping across Array storage fields 
-    let candidates = await TeamAssignModel.find({
+    // Find ALL active employees with this specialization
+    const candidates = await TeamAssignModel.find({
       status: 'Active',
       $or: [
         { specialization: { $in: [hyphenated, spaced, cleanCategory] } },
         { specialization: hyphenated },
         { specialization: spaced }
       ]
-    }).sort({ leadCount: 1 });
+    });
 
-    console.log(`📊 Query Result: Found ${candidates.length} specialized agent(s).`);
+    console.log(`📊 Found ${candidates.length} specialized agent(s) to broadcast to.`);
 
-    // 2. Loose Regex search fallback
-    if (!candidates.length) {
-      console.log("⚠️ No direct match found. Running case-insensitive loose regex fallback search...");
-      candidates = await TeamAssignModel.find({
-        specialization: { $regex: new RegExp(lead.productCategory.trim(), 'i') },
-        status: 'Active'
-      }).sort({ leadCount: 1 });
-      console.log(`📊 Regex Fallback Result: Found ${candidates.length} agent(s).`);
-    }
-
-    // 3. Round-robin Fallback (any active team member)
-    let assignee = candidates[0];
-    if (!assignee) {
-      console.log("⚠️ No matching specialized agents. Falling back to fetching ANY active team assignment profile...");
-      assignee = await TeamAssignModel.findOne({ status: 'Active' }).sort({ leadCount: 1 });
-    }
-
-    if (assignee) {
-      console.log("🎯 SUCCESS! Assigned lead to Employee:", assignee.fullname);
-      console.log("🆔 Target Employee Team Record ID (_id):", assignee._id.toString());
-      console.log("🆔 Target Employee Auth Link ID (userId):", assignee.userId ? assignee.userId.toString() : "MISSING");
-
-      // Increment lead count tracker inside team database record
-      await TeamAssignModel.findByIdAndUpdate(assignee._id, { $inc: { leadCount: 1 } });
-      console.log(`📈 Incremented leadCount counter for ${assignee.fullname}`);
-
-      // Apply unified string stamps to preserve dashboard querying compatibility
-      lead.assignedTo = assignee.userId ? assignee.userId.toString() : assignee._id.toString();
+    if (candidates.length > 0) {
+      // 1. Assign the CURRENT lead instance to the first candidate
+      const firstAssignee = candidates[0];
+      lead.assignedTo = firstAssignee.userId ? firstAssignee.userId.toString() : firstAssignee._id.toString();
       lead.assignmentStatus = 'Assigned';
+      await TeamAssignModel.findByIdAndUpdate(firstAssignee._id, { $inc: { leadCount: 1 } });
+
+      // 2. Clone and save a separate copy of this lead for all other candidates
+      const Model = lead.constructor; 
       
-      console.log("📝 Stamped lead.assignedTo with:", lead.assignedTo);
+      for (let i = 1; i < candidates.length; i++) {
+        const assignee = candidates[i];
+        const leadObj = lead.toObject();
+        delete leadObj._id; // Remove the original ID so MongoDB generates a new unique one
+        
+        leadObj.assignedTo = assignee.userId ? assignee.userId.toString() : assignee._id.toString();
+        leadObj.assignmentStatus = 'Assigned';
+
+        const clonedLead = new Model(leadObj);
+        
+        // 🌟 FIX: Added validateBeforeSave: false so missing schema requirements don't break the loop
+        await clonedLead.save({ validateBeforeSave: false });
+        await TeamAssignModel.findByIdAndUpdate(assignee._id, { $inc: { leadCount: 1 } });
+      }
+
+      console.log(`🎯 SUCCESS! Broadcasted lead to all ${candidates.length} agents.`);
     } else {
-      console.log("❌ ALL SELECTION METHODS FAILED: The teamAssign collection contains 0 active documents!");
+      console.log("⚠️ No matching specialized agents found.");
       lead.assignmentStatus = 'Unassigned';
     }
 
-    console.log("=============================================\n");
     return lead;
   } catch (err) {
     console.error('❌ EXCEPTION ERROR inside assignLeadByCategory:', err);
-    console.log("=============================================\n");
     return lead;
   }
 };
-
 /**
  * Safe single employee resolver
  */
