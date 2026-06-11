@@ -16,9 +16,24 @@ import { ceorouter } from './router/Ceoroute.js';
 import { employeeRouter } from './router/employeeRoutes.js';
 dotenv.config();
 const app = express();
+
+const allowedOrigins = [
+  "https://main-bynd.vercel.app",
+  "https://bynd-form.vercel.app",
+  "https://frontend-dashboard-one-ashen.vercel.app",
+  "https://employee-dashboard-seven-omega.vercel.app"
+];
+
 app.use(cors({
-  origin: ["http://localhost:5175","http://localhost:5174","http://localhost:5173","http://localhost:5176"],
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error("Blocked by CORS policy policy configuration"));
+    }
+  },
   credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"]
 }));
 
 app.use(express.json());
