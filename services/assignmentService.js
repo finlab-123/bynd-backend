@@ -225,7 +225,7 @@ export const getModelsForEmployee = (user) => {
 
 export const assignLeadByCategory = async (lead) => {
   console.log("\n=============================================");
-  console.log("🚀 [BROADCAST ASSIGN SYSTEM] Function triggered!");
+  console.log("🚀 [ARRAY BROADCAST SYSTEM] Function triggered!");
 
   if (!lead.productCategory && lead.schema && lead.schema.paths.productCategory) {
     lead.productCategory = lead.schema.paths.productCategory.options.default;
@@ -241,7 +241,7 @@ export const assignLeadByCategory = async (lead) => {
   const spaced = cleanCategory.replace(/-+/g, ' ');
 
   try {
-    // Find ALL active employees with this specialization
+    // Find ALL active employees qualified for this specialization
     const candidates = await TeamAssignModel.find({
       status: 'Active',
       $or: [
@@ -251,36 +251,29 @@ export const assignLeadByCategory = async (lead) => {
       ]
     });
 
-    console.log(`📊 Found ${candidates.length} specialized agent(s) to broadcast to.`);
+    console.log(`📊 Found ${candidates.length} specialized agent(s) for broadcast mapping.`);
 
     if (candidates.length > 0) {
-      // 1. Assign the CURRENT lead instance to the first candidate
-      const firstAssignee = candidates[0];
-      lead.assignedTo = firstAssignee.userId ? firstAssignee.userId.toString() : firstAssignee._id.toString();
+      // Collect target identification strings from all matching candidates
+      const assigneeIds = candidates.map(emp => 
+        emp.userId ? emp.userId.toString() : emp._id.toString()
+      );
+
+      // 🌟 STEP 1: Store the entire collection of IDs as an array on the single document
+      lead.assignedTo = assigneeIds; 
       lead.assignmentStatus = 'Assigned';
-      await TeamAssignModel.findByIdAndUpdate(firstAssignee._id, { $inc: { leadCount: 1 } });
 
-      // 2. Clone and save a separate copy of this lead for all other candidates
-      const Model = lead.constructor; 
-      
-      for (let i = 1; i < candidates.length; i++) {
-        const assignee = candidates[i];
-        const leadObj = lead.toObject();
-        delete leadObj._id; // Remove the original ID so MongoDB generates a new unique one
-        
-        leadObj.assignedTo = assignee.userId ? assignee.userId.toString() : assignee._id.toString();
-        leadObj.assignmentStatus = 'Assigned';
+      // 🌟 STEP 2: Increment leadCount for all matching employees simultaneously in one database hit
+      const candidateRecordIds = candidates.map(emp => emp._id);
+      await TeamAssignModel.updateMany(
+        { _id: { $in: candidateRecordIds } },
+        { $inc: { leadCount: 1 } }
+      );
 
-        const clonedLead = new Model(leadObj);
-        
-        // 🌟 FIX: Added validateBeforeSave: false so missing schema requirements don't break the loop
-        await clonedLead.save({ validateBeforeSave: false });
-        await TeamAssignModel.findByIdAndUpdate(assignee._id, { $inc: { leadCount: 1 } });
-      }
-
-      console.log(`🎯 SUCCESS! Broadcasted lead to all ${candidates.length} agents.`);
+      console.log(`🎯 SUCCESS! Single lead mapped to array of ${candidates.length} agents safely.`);
     } else {
       console.log("⚠️ No matching specialized agents found.");
+      lead.assignedTo = [];
       lead.assignmentStatus = 'Unassigned';
     }
 

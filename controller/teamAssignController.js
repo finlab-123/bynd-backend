@@ -51,7 +51,6 @@ export const addnewemployee = async (req, res) => {
 
     const { fullname, email, phone, status, specialization, userId } = req.body;
 
-    // Check if specialization exists or is passed correctly
     if (!specialization) {
       console.log("⚠️ WARNING: No specialization field provided in request body.");
     }
@@ -70,7 +69,7 @@ export const addnewemployee = async (req, res) => {
       fullname,
       email,
       phone,
-      specialization: specialization || 'vehicle-loan', // Fallback default to prevent schema errors
+      specialization: specialization || ['vehicle-loan'], 
       userId,
       status: status || "Active",
     });
@@ -149,13 +148,9 @@ export const deleteTeamAssignment = async (req, res) => {
   }
 };
 
-// ==============================
-// LEAD ASSIGNMENT
-// ==============================
-
 export const assignTeam = async (req, res) => {
   try {
-    const { teamId ,projectId} = req.body;
+    const { teamId, projectId } = req.body;
 
     if (!teamId || !projectId) {
       return res.status(400).json({
@@ -164,10 +159,9 @@ export const assignTeam = async (req, res) => {
       });
     }
 
-    console.log("Assigning lead", { projectId, teamId });
+    console.log("Assigning lead manually", { projectId, teamId });
 
     const lead = await findLeadById(projectId);
-
     if (!lead) {
       return res.status(404).json({
         success: false,
@@ -175,9 +169,21 @@ export const assignTeam = async (req, res) => {
       });
     }
 
-    lead.assignedTo = teamId;
-    lead.assignmentStatus = "Assigned";
+    if (!Array.isArray(lead.assignedTo)) {
+      lead.assignedTo = [];
+    }
 
+    const targetIdStr = teamId.toString();
+    if (!lead.assignedTo.includes(targetIdStr)) {
+      lead.assignedTo.push(targetIdStr);
+      
+      await TeamAssignModel.updateOne(
+        { _id: teamId },
+        { $inc: { leadCount: 1 } }
+      );
+    }
+
+    lead.assignmentStatus = "Assigned";
     await lead.save();
 
     return res.status(200).json({
@@ -195,17 +201,16 @@ export const assignTeam = async (req, res) => {
 
 export const unassignTeam = async (req, res) => {
   try {
-    const { projectId } = req.body;
+    const { projectId, teamId } = req.body;
 
-    if (!projectId) {
+    if (!projectId || !teamId) {
       return res.status(400).json({
         success: false,
-        message: "Lead ID is required",
+        message: "Lead ID and Team/Agent ID are required",
       });
     }
 
     const lead = await findLeadById(projectId);
-
     if (!lead) {
       return res.status(404).json({
         success: false,
@@ -213,14 +218,27 @@ export const unassignTeam = async (req, res) => {
       });
     }
 
-    lead.assignedTo = null;
-    lead.assignmentStatus = "Unassigned";
+    if (Array.isArray(lead.assignedTo)) {
+      const targetIdStr = teamId.toString();
+      if (lead.assignedTo.includes(targetIdStr)) {
+        lead.assignedTo = lead.assignedTo.filter(id => id !== targetIdStr);
+        
+        await TeamAssignModel.updateOne(
+          { _id: teamId },
+          { $inc: { leadCount: -1 } }
+        );
+      }
+    }
+
+    if (!lead.assignedTo || lead.assignedTo.length === 0) {
+      lead.assignmentStatus = "Unassigned";
+    }
 
     await lead.save();
 
     return res.status(200).json({
       success: true,
-      message: "Lead unassigned successfully",
+      message: "Agent unassigned successfully from this lead",
     });
   } catch (error) {
     return res.status(500).json({
@@ -235,7 +253,6 @@ export const getAssignedTeams = async (req, res) => {
     const { projectId } = req.params;
 
     const lead = await findLeadById(projectId);
-
     if (!lead) {
       return res.status(404).json({
         success: false,
@@ -243,7 +260,18 @@ export const getAssignedTeams = async (req, res) => {
       });
     }
 
-    const assignedToPayload = await resolveAssignedEmployee(lead.assignedTo);
+    let assignedToPayload = [];
+    if (Array.isArray(lead.assignedTo) && lead.assignedTo.length > 0) {
+      assignedToPayload = await Promise.all(
+        lead.assignedTo.map(async (id) => {
+          try {
+            return await resolveAssignedEmployee(id);
+          } catch {
+            return { _id: id, fullname: "Unknown Agent" };
+          }
+        })
+      );
+    }
 
     return res.status(200).json({
       success: true,

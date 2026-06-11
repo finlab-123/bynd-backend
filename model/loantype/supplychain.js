@@ -26,7 +26,7 @@ const SupplyChainSchema = new mongoose.Schema({
     enum: ['Pending', 'Approved', 'Rejected', 'In Progress'],
     default: 'Pending',
   },
-  assignedTo: { type: String, default:"", trim: true },
+  assignedTo: [{ type: String, default: "", trim: true }],
 }, { timestamps: true });
 SupplyChainSchema.index({ productCategory: 1, createdAt: -1 });
 SupplyChainSchema.index({ email: 1 });

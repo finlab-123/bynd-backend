@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-const EquitySchema  = new mongoose.Schema({
+const EquitySchema = new mongoose.Schema({
     productCategory: {
         type: String,
         required: true,
@@ -26,7 +26,7 @@ const EquitySchema  = new mongoose.Schema({
         enum: ['Pending', 'Approved', 'Rejected', 'In Progress'],
         default: 'Pending',
     },
-    assignedTo: { type: String, default:"", trim: true },
+    assignedTo: [{ type: String, default: "", trim: true }],
 }, { timestamps: true });
 EquitySchema.index({ productCategory: 1, createdAt: -1 });
 EquitySchema.index({ email: 1 });

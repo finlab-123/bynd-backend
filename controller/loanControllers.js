@@ -5,7 +5,7 @@ import SupplyChainModel from '../model/loantype/supplychain.js';
 import educationSchema from '../model/loantype/educationloan.js';
 import medicalSchema from '../model/loantype/medicalloan.js';
 import LoanAgainstPropertySchema from '../model/loantype/loanagainstproperty.js';
-import { assignLeadByCategory,syncUsersToTeamAssign } from '../services/assignmentService.js';
+import { assignLeadByCategory, syncUsersToTeamAssign } from '../services/assignmentService.js';
 
 const createCrudOperations = (Model, modelName) => ({
   getAll: async (req, res) => {
@@ -51,16 +51,9 @@ const createCrudOperations = (Model, modelName) => ({
 
   create: async (req, res) => {
     try {
-      const newItem = new Model(req.body);
-      console.log(`Creating new ${modelName} with data:`, req.body);
-      console.log(`Checking for product category to assign lead...`);
-
-      if (newItem.productCategory) {
-        await assignLeadByCategory(newItem);
-      }
-      console.log(`Lead assignment process completed. Proceeding to save the ${modelName}...`);
-      if (newItem.email) {
-        const existingItem = await Model.findOne({ email: newItem.email }).select('_id email');
+      if (req.body.email) {
+        const cleanEmail = req.body.email.toLowerCase().trim();
+        const existingItem = await Model.findOne({ email: cleanEmail }).select('_id email');
         if (existingItem) {
           return res.status(409).json({
             success: false,
@@ -68,8 +61,22 @@ const createCrudOperations = (Model, modelName) => ({
           });
         }
       }
-      await syncUsersToTeamAssign();
+
+      const newItem = new Model(req.body);
+      console.log(`Creating new ${modelName} with data:`, req.body);
+
+      if (newItem.productCategory) {
+        console.log(`Checking for product category to assign lead...`);
+        await assignLeadByCategory(newItem);
+      }
+      
+      console.log(`Lead assignment process completed. Proceeding to save the ${modelName}...`);
+      
+      if (typeof syncUsersToTeamAssign === 'function') {
+        await syncUsersToTeamAssign();
+      }
       await newItem.save();
+
       return res.status(201).json({
         success: true,
         message: `${modelName} created successfully`,
@@ -143,19 +150,10 @@ const createCrudOperations = (Model, modelName) => ({
   }
 });
 
-
 export const homeLoanControllers = createCrudOperations(HomeLoanModel, 'Home Loan');
-
-
 export const vehicleLoanControllers = createCrudOperations(VehicleLoanModel, 'Vehicle Loan');
-
-
 export const loanAgainstShareControllers = createCrudOperations(LoanAgainstShareModel, 'Loan Against Share');
 export const loanAgainstPropertyControllers = createCrudOperations(LoanAgainstPropertySchema, 'Loan Against Property');
-
-
 export const supplyChainControllers = createCrudOperations(SupplyChainModel, 'Supply Chain');
-
 export const educationLoanControllers = createCrudOperations(educationSchema, 'Education Loan');
-
 export const medicalLoanControllers = createCrudOperations(medicalSchema, 'Medical Loan');

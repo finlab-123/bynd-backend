@@ -1,8 +1,8 @@
 import mongoose from 'mongoose';
 
 const loanagainstshareSchema = new mongoose.Schema({
-  productCategory: { 
-    type: String, 
+  productCategory: {
+    type: String,
     required: true,
     default: 'loan-against-share'
   },
@@ -38,7 +38,7 @@ const loanagainstshareSchema = new mongoose.Schema({
       createdAt: { type: Date, default: Date.now },
     },
   ],
-  assignedTo: { type: String, default:"", trim: true },
+  assignedTo: [{ type: String, trim: true }],
 }, { timestamps: true });
 
 loanagainstshareSchema.index({ productCategory: 1, createdAt: -1 });

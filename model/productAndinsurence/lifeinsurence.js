@@ -25,7 +25,7 @@ const LifeInsurenceSchema = new mongoose.Schema({
         type: String,
         enum: ['Pending', 'Approved', 'Rejected', 'In Progress'],
         default: 'Pending',
-    },assignmentStatus: {
+    }, assignmentStatus: {
         type: String,
         enum: ['Assigned', 'Unassigned'],
         default: 'Unassigned',
@@ -37,7 +37,7 @@ const LifeInsurenceSchema = new mongoose.Schema({
             createdAt: { type: Date, default: Date.now },
         },
     ],
-    assignedTo: { type: String, default:"", trim: true },
+    assignedTo: [{ type: String, default: "", trim: true }],
 }, { timestamps: true });
 LifeInsurenceSchema.index({ productCategory: 1, createdAt: -1 });
 LifeInsurenceSchema.index({ email: 1 });

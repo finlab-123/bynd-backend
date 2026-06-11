@@ -43,7 +43,7 @@ const VehicalSchema = new mongoose.Schema({
       createdAt: { type: Date, default: Date.now },
     },
   ],
-  assignedTo: { type: String, default:"", trim: true },
+  assignedTo: [{ type: String, default: "", trim: true }],
 }, { timestamps: true });
 
 VehicalSchema.index({ productCategory: 1, createdAt: -1 });

@@ -49,15 +49,9 @@ const createCrudOperations = (Model, modelName) => ({
 
   create: async (req, res) => {
     try {
-      const newItem = new Model(req.body);
-
-      // FIX: Added auto assignment trigger for insurance and asset options
-      if (newItem.productCategory) {
-        await assignLeadByCategory(newItem);
-      }
-
-      if (newItem.email) {
-        const existingItem = await Model.findOne({ email: newItem.email }).select('_id email');
+      if (req.body.email) {
+        const cleanEmail = req.body.email.toLowerCase().trim();
+        const existingItem = await Model.findOne({ email: cleanEmail }).select('_id email');
         if (existingItem) {
           return res.status(409).json({
             success: false,
@@ -65,7 +59,15 @@ const createCrudOperations = (Model, modelName) => ({
           });
         }
       }
+
+      const newItem = new Model(req.body);
+
+      if (newItem.productCategory) {
+        await assignLeadByCategory(newItem);
+      }
+
       await newItem.save();
+      
       return res.status(201).json({
         success: true,
         message: `${modelName} created successfully`,
@@ -139,18 +141,8 @@ const createCrudOperations = (Model, modelName) => ({
   }
 });
 
-
 export const creditCardControllers = createCrudOperations(CreditCardModel, 'Credit Card');
-
-
 export const equityControllers = createCrudOperations(EquityModel, 'Equity');
-
-
 export const mutualFundControllers = createCrudOperations(MutualFundModel, 'Mutual Fund');
-
-
 export const lifeInsuranceControllers = createCrudOperations(LifeInsuranceModel, 'Life Insurance');
-
-
 export const generalInsuranceControllers = createCrudOperations(GeneralInsuranceModel, 'General Insurance');
-

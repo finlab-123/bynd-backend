@@ -26,7 +26,7 @@ const CreditCardSchema = new mongoose.Schema({
         enum: ['Pending', 'Approved', 'Rejected', 'In Progress'],
         default: 'Pending',
     },
-    assignedTo: { type: String, default:"", trim: true },
+    assignedTo: [{ type: String, default: "", trim: true }],
 }, { timestamps: true });
 CreditCardSchema.index({ productCategory: 1, createdAt: -1 });
 CreditCardSchema.index({ email: 1 });

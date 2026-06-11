@@ -41,11 +41,11 @@ const loanAgainstPropertySchema = new mongoose.Schema({
     enum: ['Assigned', 'Unassigned'],
     default: 'Unassigned',
   },
-  assignedTo: { 
+  assignedTo: [{ 
     type: String, 
     default: "", 
     trim: true 
-  },
+  }],
   remarks: [
     {
       author: { type: String, trim: true },

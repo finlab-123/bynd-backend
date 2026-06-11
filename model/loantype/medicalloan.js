@@ -26,8 +26,7 @@ const medicalSchema = new mongoose.Schema({
     enum: ['Pending', 'Approved', 'Rejected', 'In Progress'],
     default: 'Pending',
   },
-  assignedTo: { type: String, default: "", trim: true },
-  assignmentStatus: {
+  assignedTo: [{ type: String, default: "", trim: true }], assignmentStatus: {
     type: String,
     enum: ['Assigned', 'Unassigned'],
     default: 'Unassigned',

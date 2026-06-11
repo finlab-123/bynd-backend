@@ -39,7 +39,7 @@ const MutualFundSchema = new mongoose.Schema({
             createdAt: { type: Date, default: Date.now },
         },
     ],
-    assignedTo: { type: String, default:"", trim: true },
+    assignedTo: [{ type: String, default: "", trim: true }],
 }, { timestamps: true });
 
 MutualFundSchema.index({ productCategory: 1, createdAt: -1 });

@@ -1,13 +1,14 @@
-import {
-  allLeadModels, getModelsForEmployee,
-  getAssignedToValuesForEmployee,
-  resolveAssignedEmployee
-} from '../services/assignmentService.js';
+import TeamAssignModel from "../model/teamAssign.js";
+import { 
+  findLeadById, 
+  resolveAssignedEmployee, 
+  getModelsForEmployee, 
+  getAssignedToValuesForEmployee 
+} from "../services/assignmentService.js";
+
 export const getEmployeeDashboard = async (req, res) => {
   try {
     const assignedToValues = await getAssignedToValuesForEmployee(req.user);
-
-    // CHANGE THIS LINE: Use the filter function instead of hardcoding allLeadModels
     const targetModels = getModelsForEmployee(req.user);
 
     const statusCounts = await Promise.all(
@@ -52,26 +53,19 @@ export const getEmployeeDashboard = async (req, res) => {
     return res.status(500).json({ success: false, message: 'Unable to fetch dashboard data' });
   }
 };
+
 export const getEmployeeLeads = async (req, res) => {
   try {
     console.log("\n=============================================");
     console.log("🔄 [DASHBOARD RELOAD] Employee reloading leads page...");
-    console.log("👤 Logged-in User Session (req.user):", JSON.stringify(req.user, null, 2));
 
-    let { status, search, page = 1, limit = 10 } = req.query;
+    let { status, page = 1, limit = 10 } = req.query;
     const skip = Math.max(0, Number(page) - 1) * Number(limit);
 
-    console.log("🔍 Fetching assignment mapping IDs for this employee...");
     const assignedToValues = await getAssignedToValuesForEmployee(req.user);
-    console.log("🆔 Combined Assignment lookup keys found for query:", assignedToValues);
-
-    console.log("📂 Determining target database models for employee specialization...");
     const targetModels = getModelsForEmployee(req.user);
-    console.log("📚 collections array to be queried:", targetModels.map(m => m.modelName));
 
     if (!assignedToValues.length) {
-      console.log("⚠️ No assignment IDs found linked to this profile. Returning early with 0 results.");
-      console.log("=============================================\n");
       return res.status(200).json({ success: true, total: 0, data: [] });
     }
 
@@ -91,14 +85,10 @@ export const getEmployeeLeads = async (req, res) => {
       query.status = { $regex: new RegExp(`^${cleanStatus}$`, 'i') };
     }
 
-    console.log("⚙️ Final MongoDB filter object generated:", JSON.stringify(query, null, 2));
-
     const modelsResults = await Promise.all(
       targetModels.map(async (model) => {
         try {
-          const leads = await model.find(query).sort({ createdAt: -1 }).lean();
-          console.log(`📊 Collection [${model.modelName}] returned ${leads.length} matching leads.`);
-          return leads;
+          return await model.find(query).sort({ createdAt: -1 }).lean();
         } catch (err) {
           console.error(`❌ Error querying model ${model.modelName}:`, err.message);
           return [];
@@ -108,9 +98,6 @@ export const getEmployeeLeads = async (req, res) => {
 
     const allLeads = modelsResults.flat().filter(Boolean)
       .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
-
-    console.log("📈 Total aggregated leads found across all targets:", allLeads.length);
-    console.log("=============================================\n");
 
     const total = allLeads.length;
     const pageItems = allLeads.slice(skip, skip + Number(limit));
@@ -122,7 +109,6 @@ export const getEmployeeLeads = async (req, res) => {
       limit: Number(limit),
       data: pageItems,
     });
-
   } catch (error) {
     console.error("❌ CRITICAL EXCEPTION IN getEmployeeLeads:", error);
     return res.status(500).json({ success: false, message: "Internal server error" });

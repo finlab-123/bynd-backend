@@ -21,10 +21,10 @@ const educationSchema = new mongoose.Schema({
   employeeType: { type: String, required: true },
   city: { type: String, trim: true },
   state: { type: String, required: true },
-  
+
   // 🟢 CHANGED: Captures both frontend field naming styles dynamically
-  loanAmount: { type: Number, default: 0 }, 
-  requiredLoanAmount: { type: Number, default: 0 }, 
+  loanAmount: { type: Number, default: 0 },
+  requiredLoanAmount: { type: Number, default: 0 },
   annualIncome: { type: Number, default: 0 },
   marketvalue: { type: String, trim: true },
   propertyDescription: { type: String, trim: true },
@@ -49,7 +49,7 @@ const educationSchema = new mongoose.Schema({
       createdAt: { type: Date, default: Date.now },
     },
   ],
-  assignedTo: { type: String, default: "", trim: true },
+  assignedTo: [{ type: String, default: "", trim: true }],
 }, { timestamps: true });
 
 educationSchema.index({ productCategory: 1, createdAt: -1 });
