@@ -32,6 +32,7 @@ export const registerlead = async (req, res) => {
         res.status(500).json({ success: false, message: error.message });
     }
 };
+
 export const loginlead = async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -54,7 +55,11 @@ export const loginlead = async (req, res) => {
             process.env.JWT_SECRET || "fallback_secret_key",
             { expiresIn: '1d' }
         );
-      const cookieOptions = {
+
+        // ✅ FIX: Define the missing flag variable
+        const isProduction = process.env.NODE_ENV === "production";
+
+        const cookieOptions = {
             httpOnly: true,
             // 'secure' MUST be true if sameSite is 'none'. Render supports HTTPS natively.
             secure: isProduction ? true : false, 
@@ -73,6 +78,7 @@ export const loginlead = async (req, res) => {
         res.status(500).json({ success: false, message: error.message });
     }
 };
+
 export const getuser = async (req, res) => {
     try {
         console.log("Authenticated user:", req.user);
@@ -80,18 +86,19 @@ export const getuser = async (req, res) => {
             return res.status(401).json({ success: false, message: 'User not authenticated' });
         }
         res.status(200).json({ success: true, data: req.user });
-        // const users = await Userschema.findById(req.user._id).select('-password');
-        // res.status(200).json({ success: true, data: users });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
 };
+
 export const logoutlead = (req, res) => {
+    const isProduction = process.env.NODE_ENV === "production";
+    
+    // ✅ FIX: Mirror cookie options here so browser can find and wipe the cross-site token cleanly
     res.clearCookie('token', {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "strict"
+        secure: isProduction ? true : false,
+        sameSite: isProduction ? "none" : "lax"
     });
     res.status(200).json({ success: true, message: 'Logout successful' });
 };
-
