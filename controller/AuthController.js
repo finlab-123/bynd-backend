@@ -54,11 +54,13 @@ export const loginlead = async (req, res) => {
             process.env.JWT_SECRET || "fallback_secret_key",
             { expiresIn: '1d' }
         );
-        const cookieOptions = {
+      const cookieOptions = {
             httpOnly: true,
-            secure: process.env.NODE_ENV === "production", // false in development
-            sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
-            maxAge: 24 * 60 * 60 * 1000
+            // 'secure' MUST be true if sameSite is 'none'. Render supports HTTPS natively.
+            secure: isProduction ? true : false, 
+            // 'none' allows cookies to cross from vercel.app to onrender.com
+            sameSite: isProduction ? "none" : "lax", 
+            maxAge: 24 * 60 * 60 * 1000 // 1 day
         };
         res.cookie('token', token, cookieOptions);
 
