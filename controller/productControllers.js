@@ -91,7 +91,6 @@ const createCrudOperations = (Model, modelName) => ({
     }
   },
 
-  // 🟢 OPTIMIZED: Synchronizes dashboard metrics transparently on update requests
   update: async (req, res) => {
     try {
       const { id } = req.params;

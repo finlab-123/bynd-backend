@@ -5,22 +5,18 @@ import jwt from 'jsonwebtoken';
 export const registerlead = async (req, res) => {
     try {
         const { fullname, email, phone, password, role, specialization } = req.body;
-        // Validate required fields
         if (!fullname || !email || !phone || !password || !role) {
             return res.status(400).json({ success: false, message: 'All fields are required' });
         }
-        // Validate specialization for employee role
         if (role === 'employee') {
             if (!specialization || (Array.isArray(specialization) ? specialization.length === 0 : !specialization.trim())) {
                 return res.status(400).json({ success: false, message: 'Specialization is required for employee role' });
             }
         }
-        // Check if user already exists
         const existingUser = await Userschema.findOne({ email, phone });
         if (existingUser) {
             return res.status(400).json({ success: false, message: 'User already exists' });
         }
-        // Prepare user data
         const userData = { fullname, email, phone, password: bcrypt.hashSync(password, 10), role };
         if (role === 'employee') {
             userData.specialization = specialization;
@@ -56,14 +52,11 @@ export const loginlead = async (req, res) => {
             { expiresIn: '1d' }
         );
 
-        // ✅ FIX: Define the missing flag variable
         const isProduction = process.env.NODE_ENV === "production";
 
         const cookieOptions = {
             httpOnly: true,
-            // 'secure' MUST be true if sameSite is 'none'. Render supports HTTPS natively.
             secure: isProduction ? true : false, 
-            // 'none' allows cookies to cross from vercel.app to onrender.com
             sameSite: isProduction ? "none" : "lax", 
             maxAge: 24 * 60 * 60 * 1000 // 1 day
         };
@@ -94,7 +87,6 @@ export const getuser = async (req, res) => {
 export const logoutlead = (req, res) => {
     const isProduction = process.env.NODE_ENV === "production";
     
-    // ✅ FIX: Mirror cookie options here so browser can find and wipe the cross-site token cleanly
     res.clearCookie('token', {
         httpOnly: true,
         secure: isProduction ? true : false,

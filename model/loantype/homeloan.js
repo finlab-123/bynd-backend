@@ -4,8 +4,8 @@ const homeloanSchema = new mongoose.Schema({
   productCategory: {
     type: String,
     required: true,
-    default: 'home-loan', // 🟢 CHANGED: Set default to lowercase hyphenated format to match employee specialization exactly
-    lowercase: true,       // 🟢 ADDED: Forces string values to lowercase automatically
+    default: 'home-loan', 
+    lowercase: true,     
     trim: true
   },
   firstName: { type: String, required: true, trim: true },
@@ -20,15 +20,13 @@ const homeloanSchema = new mongoose.Schema({
   employeeType: { type: String, required: true },
   city: { type: String, trim: true },
   state: { type: String, required: true },
-
-  // 🟢 CHANGED: Aligning keys to capture frontend payload fields gracefully
-  requiredAmount: { type: Number, default: 0 },         // Maps directly to frontend payload
-  requiredLoanAmount: { type: Number, default: 0 },     // Kept for backward compatibility fallback
-  income: { type: Number, default: 0 },                 // Annual Income
-  propertyDescription: { type: String, trim: true },    // Maps directly to frontend payload
-  propertytype: { type: String, trim: true },           // Kept for backward compatibility fallback
-  marketValue: { type: String, trim: true },            // 🟢 CHANGED: Fixed casing to camelCase to match payload key 'marketValue'
-  marketvalue: { type: String, trim: true },            // Kept for backward compatibility fallback
+  requiredAmount: { type: Number, default: 0 },        
+  requiredLoanAmount: { type: Number, default: 0 },    
+  income: { type: Number, default: 0 },                
+  propertyDescription: { type: String, trim: true },  
+  propertytype: { type: String, trim: true },          
+  marketValue: { type: String, trim: true },           
+  marketvalue: { type: String, trim: true },           
 
   agree: { type: Boolean, required: true },
 
@@ -52,9 +50,8 @@ const homeloanSchema = new mongoose.Schema({
   assignedTo: [{ type: String, default: "", trim: true }],
 }, { timestamps: true });
 
-// Indexes for better performance
 homeloanSchema.index({ productCategory: 1, createdAt: -1 });
 homeloanSchema.index({ email: 1 });
-homeloanSchema.index({ assignedTo: 1 }); // 🟢 ADDED: Speeds up your employee dashboard lookups significantly
+homeloanSchema.index({ assignedTo: 1 });
 
 export default mongoose.model('homeloan', homeloanSchema, 'homeloans');

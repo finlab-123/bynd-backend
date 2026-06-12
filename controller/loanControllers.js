@@ -97,12 +97,10 @@ const createCrudOperations = (Model, modelName) => ({
     }
   },
 
-  // 🟢 OPTIMIZED: Captures system events dynamically on manual operator updates
   update: async (req, res) => {
     try {
       const { id } = req.params;
       
-      // 1. Fetch document state before mutation to verify operational flags
       const currentDoc = await Model.findById(id);
       if (!currentDoc) {
         return res.status(404).json({
@@ -111,10 +109,8 @@ const createCrudOperations = (Model, modelName) => ({
         });
       }
 
-      // 2. Safely merge runtime parameters into our schema layer
       const updateData = { ...req.body };
 
-      // 3. Re-evaluate metrics if an unassigned ticket is forced into production
       if (updateData.assignmentStatus === 'Assigned' && currentDoc.assignmentStatus === 'Unassigned') {
         const structuralBuffer = new Model({ ...currentDoc.toObject(), ...updateData });
         await assignLeadByCategory(structuralBuffer);
@@ -128,7 +124,6 @@ const createCrudOperations = (Model, modelName) => ({
         { returnDocument: 'after', runValidators: true }
       );
 
-      // 4. Fire team synchronization triggers globally to update tracking numbers
       if (typeof syncUsersToTeamAssign === 'function') {
         await syncUsersToTeamAssign();
       }

@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-const VehicalSchema = new mongoose.Schema({
+const VehicleSchema = new mongoose.Schema({
   productCategory: {
     type: String,
     required: true,
@@ -28,7 +28,7 @@ const VehicalSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['Pending', 'Approved', 'Rejected', 'In Progress'],
+    enum: ['Pending', 'Approved', 'Rejected', 'In Progress', 'Ringing', 'Call Back', 'Documents Verified'],
     default: 'Pending',
   },
   assignmentStatus: {
@@ -46,8 +46,7 @@ const VehicalSchema = new mongoose.Schema({
   assignedTo: [{ type: String, default: "", trim: true }],
 }, { timestamps: true });
 
-VehicalSchema.index({ productCategory: 1, createdAt: -1 });
-VehicalSchema.index({ email: 1 });
+VehicleSchema.index({ productCategory: 1, createdAt: -1 });
+VehicleSchema.index({ email: 1 });
 
-// Clean mapping to match your exact tracking list variables
-export default mongoose.model('vehicle', VehicalSchema, 'vehicles');
+export default mongoose.model('vehicle', VehicleSchema, 'vehicles');

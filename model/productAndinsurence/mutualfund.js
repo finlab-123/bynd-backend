@@ -6,10 +6,10 @@ const MutualFundSchema = new mongoose.Schema({
         required: true,
         default: 'mutual-fund'
     },
-    firstName: { type: String, required: true, trim: true }, // Fixed from name
+    firstName: { type: String, required: true, trim: true }, 
     lastName: { type: String, required: true, trim: true },
     email: { type: String, required: true, lowercase: true, trim: true },
-    phone: { type: String, required: true, trim: true }, // Fixed from mobile
+    phone: { type: String, required: true, trim: true }, 
     dob: { type: String },
     gender: { type: String, required: true },
     pincode: { type: String, trim: true },
@@ -24,7 +24,7 @@ const MutualFundSchema = new mongoose.Schema({
     agree: { type: Boolean, required: true },
     status: {
         type: String,
-        enum: ['Pending', 'Approved', 'Rejected', 'In Progress'],
+        enum: ['Pending', 'Approved', 'Rejected', 'In Progress', 'Ringing', 'Call Back', 'Documents Verified'],
         default: 'Pending',
     },
     assignmentStatus: {
@@ -45,5 +45,4 @@ const MutualFundSchema = new mongoose.Schema({
 MutualFundSchema.index({ productCategory: 1, createdAt: -1 });
 MutualFundSchema.index({ email: 1 });
 
-// Third argument forces mongoose to query your exact database name format safely
 export default mongoose.model('mutualfund', MutualFundSchema, 'mutualfunds');

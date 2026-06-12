@@ -4,8 +4,7 @@ const loanAgainstPropertySchema = new mongoose.Schema({
   productCategory: {
     type: String,
     required: true,
-    default: 'loan-against-property', // 🟢 Normalizes category fields cleanly
-    lowercase: true,
+    default: 'loan-against-property',
     trim: true
   },
   firstName: { type: String, required: true, trim: true },
@@ -20,22 +19,17 @@ const loanAgainstPropertySchema = new mongoose.Schema({
   employeeType: { type: String, required: true },
   city: { type: String, trim: true },
   state: { type: String, required: true },
-
-  // Payload structure mappings
   loanAmount: { type: Number, default: 0 },
   annualIncome: { type: Number, default: 0 },
   marketvalue: { type: String, trim: true },
   propertyDescription: { type: String, trim: true },
   loanType: { type: String, trim: true },
   agree: { type: Boolean, required: true },
-
   status: {
     type: String,
-    enum: ['Pending', 'Approved', 'Rejected', 'In Progress'],
+    enum: ['Pending', 'Approved', 'Rejected', 'In Progress', 'Ringing', 'Call Back', 'Documents Verified'],
     default: 'Pending',
   },
-  
-  // 🟢 CRITICAL MISSING FIELDS BELOW: Adds fields to store assignments permanently
   assignmentStatus: {
     type: String,
     enum: ['Assigned', 'Unassigned'],
@@ -55,9 +49,8 @@ const loanAgainstPropertySchema = new mongoose.Schema({
   ],
 }, { timestamps: true });
 
-// Performance indexing arrays
 loanAgainstPropertySchema.index({ productCategory: 1, createdAt: -1 });
 loanAgainstPropertySchema.index({ email: 1 });
-loanAgainstPropertySchema.index({ assignedTo: 1 }); // 🟢 Speeds up dashboard queries
+loanAgainstPropertySchema.index({ assignedTo: 1 }); 
 
 export default mongoose.model('loanagainstproperty', loanAgainstPropertySchema, 'loanagainstproperties');

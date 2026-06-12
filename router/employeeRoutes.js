@@ -12,4 +12,3 @@ employeeRouter.use(authenticate, RoleOnly('employee'));
 employeeRouter.get('/dashboard', getEmployeeDashboard);
 employeeRouter.get('/leads', getEmployeeLeads);
 employeeRouter.patch('/leads/:id/status', updateLeadStatus);
-console.log("✅ Employee Router Loaded");

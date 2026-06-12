@@ -4,6 +4,7 @@ const EquitySchema = new mongoose.Schema({
     productCategory: {
         type: String,
         required: true,
+        default: 'equity'
     },
     firstName: { type: String, required: true, trim: true },
     lastName: { type: String, required: true, trim: true },
@@ -23,12 +24,25 @@ const EquitySchema = new mongoose.Schema({
     agree: { type: Boolean, required: true },
     status: {
         type: String,
-        enum: ['Pending', 'Approved', 'Rejected', 'In Progress'],
+        enum: ['Pending', 'Approved', 'Rejected', 'In Progress', 'Ringing', 'Call Back', 'Documents Verified'],
         default: 'Pending',
     },
+    assignmentStatus: {
+        type: String,
+        enum: ['Assigned', 'Unassigned'],
+        default: 'Unassigned',
+    },
+    remarks: [
+        {
+            author: { type: String, trim: true },
+            text: { type: String, trim: true },
+            createdAt: { type: Date, default: Date.now },
+        },
+    ],
     assignedTo: [{ type: String, default: "", trim: true }],
 }, { timestamps: true });
+
 EquitySchema.index({ productCategory: 1, createdAt: -1 });
 EquitySchema.index({ email: 1 });
 
-export default mongoose.model('equity', EquitySchema, 'equities');  
+export default mongoose.model('equity', EquitySchema, 'equities');

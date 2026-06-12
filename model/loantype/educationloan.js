@@ -5,8 +5,7 @@ const educationSchema = new mongoose.Schema({
   productCategory: {
     type: String,
     required: true,
-    default: 'education-loan', // 🟢 CHANGED: Realigned to match lowercase arrays natively
-    lowercase: true,
+    default: 'education-loan', 
     trim: true
   },
   firstName: { type: String, required: true, trim: true },
@@ -21,8 +20,6 @@ const educationSchema = new mongoose.Schema({
   employeeType: { type: String, required: true },
   city: { type: String, trim: true },
   state: { type: String, required: true },
-
-  // 🟢 CHANGED: Captures both frontend field naming styles dynamically
   loanAmount: { type: Number, default: 0 },
   requiredLoanAmount: { type: Number, default: 0 },
   annualIncome: { type: Number, default: 0 },
@@ -54,6 +51,6 @@ const educationSchema = new mongoose.Schema({
 
 educationSchema.index({ productCategory: 1, createdAt: -1 });
 educationSchema.index({ email: 1 });
-educationSchema.index({ assignedTo: 1 }); // 🟢 ADDED: Optimizes aggregate query dashboard counters
+educationSchema.index({ assignedTo: 1 }); 
 
 export default mongoose.model('educationloan', educationSchema, 'educationloans');

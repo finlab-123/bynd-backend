@@ -1,7 +1,6 @@
 import { CeoAction } from '../model/CeoModel.js';
 import { Userschema } from '../model/Authmodel.js';
 
-// 1. Fetch live metrics from data tables for the CEO workspace
 export const getCeoDashboardStats = async (req, res) => {
     try {
         const [totalUsers, totalCrms, activeTasks] = await Promise.all([
@@ -25,7 +24,6 @@ export const getCeoDashboardStats = async (req, res) => {
     }
 };
 
-// 2. CEO Action: Create and assign a task/directive to a CRM manager
 export const createCeoDirective = async (req, res) => {
     try {
         const { actionType, title, description, assignedTo, priority } = req.body;
@@ -47,7 +45,7 @@ export const createCeoDirective = async (req, res) => {
             description,
             assignedTo,
             priority,
-            createdBy: req.user._id // Provided via your authmiddleware configuration
+            createdBy: req.user._id
         });
 
         await newDirective.save();
@@ -57,7 +55,6 @@ export const createCeoDirective = async (req, res) => {
     }
 };
 
-// 3. Fetch past directives history
 export const getCeoDirectives = async (req, res) => {
     try {
         const directives = await CeoAction.find()

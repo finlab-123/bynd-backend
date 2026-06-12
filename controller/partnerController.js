@@ -1,6 +1,5 @@
 import { Partner } from "../model/partnerwithus.js";
 export const sendOtp = async (req, res) => {
-  // const { phone } = req.body;
   
   const mockOtp = "123456"; 
   res.status(200).json({ otp: mockOtp });

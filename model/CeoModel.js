@@ -6,20 +6,9 @@ const CEOActionSchema = new mongoose.Schema({
         required: true,
         enum: ['ASSIGN_TASK', 'UPDATE_KPI', 'REALLOCATE_RESOURCE', 'SYSTEM_CONFIG']
     },
-    title: {
-        type: String,
-        required: true,
-        trim: true
-    },
-    description: {
-        type: String,
-        required: true
-    },
-    assignedTo: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User', 
-        required: false
-    },
+    title: { type: String, required: true, trim: true },
+    description: { type: String, required: true },
+    assignedTo: { type: mongoose.Schema.Types.ObjectId, ref: 'user', required: false },
     priority: {
         type: String,
         enum: ['low', 'medium', 'high', 'critical'],
@@ -30,11 +19,7 @@ const CEOActionSchema = new mongoose.Schema({
         enum: ['pending', 'in-progress', 'completed'],
         default: 'pending'
     },
-    createdBy: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User', 
-        required: true
-    }
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'user', required: true }
 }, { timestamps: true });
 
 export const CeoAction = mongoose.model('CeoAction', CEOActionSchema);

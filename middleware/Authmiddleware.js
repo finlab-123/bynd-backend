@@ -1,7 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { Userschema } from '../model/Authmodel.js';
 
-// Authentication Guardian Middleware
 export const authenticate = async (req, res, next) => {
     try {
         const token = req.cookies.token;
@@ -32,7 +31,6 @@ export const authenticate = async (req, res, next) => {
     }
 };
 
-// Dynamic Role Authorization Middleware
 export const RoleOnly = (...allowedRoles) => {
     return (req, res, next) => {
         if (!req.user) {

@@ -11,7 +11,6 @@ export const getEmployeeDashboard = async (req, res) => {
     const assignedToValues = await getAssignedToValuesForEmployee(req.user);
     const targetModels = getModelsForEmployee(req.user);
 
-    // 1. Calculate absolute real total independent of specific statuses
     let absoluteTotal = 0;
     const totalCounts = await Promise.all(
       targetModels.map(async (model) => {
@@ -24,7 +23,6 @@ export const getEmployeeDashboard = async (req, res) => {
     );
     absoluteTotal = totalCounts.reduce((acc, curr) => acc + curr, 0);
 
-    // 2. Fetch specific individual state counts using regex matches
     const statusCounts = await Promise.all(
       targetModels.map(async (model) => {
         try {
@@ -45,7 +43,6 @@ export const getEmployeeDashboard = async (req, res) => {
       })
     );
 
-    // 3. Aggregate separate counters clean and explicitly
     const totals = statusCounts.reduce(
       (acc, [pending, inProgress, approved, rejected, ringing, callback, docVerified]) => ({
         pending: acc.pending + (pending || 0),
