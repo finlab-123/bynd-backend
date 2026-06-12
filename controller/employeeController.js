@@ -11,27 +11,46 @@ export const getEmployeeDashboard = async (req, res) => {
     const assignedToValues = await getAssignedToValuesForEmployee(req.user);
     const targetModels = getModelsForEmployee(req.user);
 
+    // 1. Calculate absolute real total independent of specific statuses
+    let absoluteTotal = 0;
+    const totalCounts = await Promise.all(
+      targetModels.map(async (model) => {
+        try {
+          return await model.countDocuments({ assignedTo: { $in: assignedToValues } });
+        } catch (e) {
+          return 0;
+        }
+      })
+    );
+    absoluteTotal = totalCounts.reduce((acc, curr) => acc + curr, 0);
+
+    // 2. Fetch specific state configurations
     const statusCounts = await Promise.all(
       targetModels.map(async (model) => {
         try {
-          const [pending, inProgress, approved, rejected] = await Promise.all([
+          const [pending, inProgress, approved, rejected, ringing, callback, docVerified] = await Promise.all([
             model.countDocuments({ assignedTo: { $in: assignedToValues }, status: { $regex: /^pending$/i } }),
             model.countDocuments({ assignedTo: { $in: assignedToValues }, status: { $regex: /^in progress$/i } }),
             model.countDocuments({ assignedTo: { $in: assignedToValues }, status: { $regex: /^approved$/i } }),
             model.countDocuments({ assignedTo: { $in: assignedToValues }, status: { $regex: /^rejected$/i } }),
+            model.countDocuments({ assignedTo: { $in: assignedToValues }, status: { $regex: /^ringing$/i } }),
+            model.countDocuments({ assignedTo: { $in: assignedToValues }, status: { $regex: /^call back$/i } }),
+            model.countDocuments({ assignedTo: { $in: assignedToValues }, status: { $regex: /^documents verified$/i } }),
           ]);
-          return [pending, inProgress, approved, rejected];
+          return [pending, inProgress, approved, rejected, ringing, callback, docVerified];
         } catch (e) {
           console.error(`Error counting stats on model: ${model.modelName}`, e);
-          return [0, 0, 0, 0];
+          return [0, 0, 0, 0, 0, 0, 0];
         }
       })
     );
 
+    // 3. Aggregate results and map operational sub-statuses into 'In Progress' group metrics securely
     const totals = statusCounts.reduce(
-      (acc, [pending, inProgress, approved, rejected]) => ({
+      (acc, [pending, inProgress, approved, rejected, ringing, callback, docVerified]) => ({
         pending: acc.pending + (pending || 0),
-        inProgress: acc.inProgress + (inProgress || 0),
+        // Grouping operational metrics dynamically under In Progress dashboard tracker
+        inProgress: acc.inProgress + (inProgress || 0) + (ringing || 0) + (callback || 0) + (docVerified || 0),
         approved: acc.approved + (approved || 0),
         rejected: acc.rejected + (rejected || 0),
       }),
@@ -41,7 +60,7 @@ export const getEmployeeDashboard = async (req, res) => {
     return res.status(200).json({
       success: true,
       data: {
-        total: totals.pending + totals.inProgress + totals.approved + totals.rejected,
+        total: absoluteTotal, // Absolute sync fallback security 
         pending: totals.pending,
         inProgress: totals.inProgress,
         approved: totals.approved,
@@ -136,7 +155,6 @@ export const updateLeadStatus = async (req, res) => {
     let lead = null;
     let targetModel = null;
 
-    // Find the lead across the employee's assigned models
     for (const model of targetModels) {
       lead = await model.findOne({
         _id: id,
@@ -152,13 +170,9 @@ export const updateLeadStatus = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Lead not found or access denied' });
     }
 
-    // 🟢 STEP 2: Clear validators dynamically in memory so you don't have to edit all schemas
     targetModel.schema.path('status').validators = []; 
-
-    // Apply the standardized status string
     lead.status = cleanStatus;
 
-    // 🟢 STEP 3: Handle the remarks array safely
     if (remark) {
       if (!Array.isArray(lead.remarks)) {
         lead.remarks = [];
@@ -172,7 +186,6 @@ export const updateLeadStatus = async (req, res) => {
 
     await lead.save();
 
-    // 🟢 STEP 4: Instantly sync dashboard counter states
     if (typeof syncUsersToTeamAssign === 'function') {
       await syncUsersToTeamAssign();
     }
