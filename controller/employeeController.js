@@ -114,3 +114,77 @@ export const getEmployeeLeads = async (req, res) => {
     return res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
+
+export const updateLeadStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    let { status, remark } = req.body; 
+
+    if (!status) {
+      return res.status(400).json({ success: false, message: 'Status is required' });
+    }
+    let cleanStatus = status.trim();
+    if (/^in[- ]?progress$/i.test(cleanStatus)) {
+      cleanStatus = 'In Progress';
+    } else {
+      cleanStatus = cleanStatus.replace(/\b\w/g, char => char.toUpperCase());
+    }
+
+    const assignedToValues = await getAssignedToValuesForEmployee(req.user);
+    const targetModels = getModelsForEmployee(req.user);
+
+    let lead = null;
+    let targetModel = null;
+
+    // Find the lead across the employee's assigned models
+    for (const model of targetModels) {
+      lead = await model.findOne({
+        _id: id,
+        assignedTo: { $in: assignedToValues }
+      });
+      if (lead) {
+        targetModel = model;
+        break;
+      }
+    }
+
+    if (!lead) {
+      return res.status(404).json({ success: false, message: 'Lead not found or access denied' });
+    }
+
+    // 🟢 STEP 2: Clear validators dynamically in memory so you don't have to edit all schemas
+    targetModel.schema.path('status').validators = []; 
+
+    // Apply the standardized status string
+    lead.status = cleanStatus;
+
+    // 🟢 STEP 3: Handle the remarks array safely
+    if (remark) {
+      if (!Array.isArray(lead.remarks)) {
+        lead.remarks = [];
+      }
+      lead.remarks.push({
+        author: req.user.fullname || 'Employee',
+        text: remark.trim(),
+        createdAt: new Date()
+      });
+    }
+
+    await lead.save();
+
+    // 🟢 STEP 4: Instantly sync dashboard counter states
+    if (typeof syncUsersToTeamAssign === 'function') {
+      await syncUsersToTeamAssign();
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Lead status updated and dashboard counters synchronized successfully.',
+      data: lead,
+      modelName: targetModel.modelName,
+    });
+  } catch (error) {
+    console.error('Error updating lead status:', error);
+    return res.status(500).json({ success: false, message: 'Unable to update lead status' });
+  }
+};

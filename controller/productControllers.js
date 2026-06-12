@@ -3,7 +3,7 @@ import EquityModel from '../model/productAndinsurence/equity.js';
 import MutualFundModel from '../model/productAndinsurence/mutualfund.js';
 import LifeInsuranceModel from '../model/productAndinsurence/lifeinsurence.js';
 import GeneralInsuranceModel from '../model/productAndinsurence/generalInsurence.js';
-import { assignLeadByCategory } from '../services/assignmentService.js';
+import { assignLeadByCategory, syncUsersToTeamAssign } from '../services/assignmentService.js';
 
 const createCrudOperations = (Model, modelName) => ({
   getAll: async (req, res) => {
@@ -66,6 +66,9 @@ const createCrudOperations = (Model, modelName) => ({
         await assignLeadByCategory(newItem);
       }
 
+      if (typeof syncUsersToTeamAssign === 'function') {
+        await syncUsersToTeamAssign();
+      }
       await newItem.save();
       
       return res.status(201).json({
@@ -88,20 +91,35 @@ const createCrudOperations = (Model, modelName) => ({
     }
   },
 
+  // 🟢 OPTIMIZED: Synchronizes dashboard metrics transparently on update requests
   update: async (req, res) => {
     try {
       const { id } = req.params;
+      
+      const currentDoc = await Model.findById(id);
+      if (!currentDoc) {
+        return res.status(404).json({ success: false, message: `${modelName} not found` });
+      }
+
+      const updateData = { ...req.body };
+
+      if (updateData.assignmentStatus === 'Assigned' && currentDoc.assignmentStatus === 'Unassigned') {
+        const structuralBuffer = new Model({ ...currentDoc.toObject(), ...updateData });
+        await assignLeadByCategory(structuralBuffer);
+        updateData.assignedTo = structuralBuffer.assignedTo;
+        updateData.assignmentStatus = structuralBuffer.assignmentStatus;
+      }
+
       const updatedItem = await Model.findByIdAndUpdate(
         id,
-        { $set: req.body },
+        { $set: updateData },
         { returnDocument: 'after', runValidators: true }
       );
-      if (!updatedItem) {
-        return res.status(404).json({
-          success: false,
-          message: `${modelName} not found`
-        });
+
+      if (typeof syncUsersToTeamAssign === 'function') {
+        await syncUsersToTeamAssign();
       }
+
       return res.status(200).json({
         success: true,
         message: `${modelName} updated successfully`,
@@ -125,6 +143,9 @@ const createCrudOperations = (Model, modelName) => ({
           success: false,
           message: `${modelName} not found`
         });
+      }
+      if (typeof syncUsersToTeamAssign === 'function') {
+        await syncUsersToTeamAssign();
       }
       return res.status(200).json({
         success: true,

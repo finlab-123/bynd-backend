@@ -97,20 +97,42 @@ const createCrudOperations = (Model, modelName) => ({
     }
   },
 
+  // 🟢 OPTIMIZED: Captures system events dynamically on manual operator updates
   update: async (req, res) => {
     try {
       const { id } = req.params;
-      const updatedItem = await Model.findByIdAndUpdate(
-        id,
-        { $set: req.body },
-        { returnDocument: 'after', runValidators: true }
-      );
-      if (!updatedItem) {
+      
+      // 1. Fetch document state before mutation to verify operational flags
+      const currentDoc = await Model.findById(id);
+      if (!currentDoc) {
         return res.status(404).json({
           success: false,
-          message: `${modelName} not found`
+          message: `${modelName} record profile not found.`
         });
       }
+
+      // 2. Safely merge runtime parameters into our schema layer
+      const updateData = { ...req.body };
+
+      // 3. Re-evaluate metrics if an unassigned ticket is forced into production
+      if (updateData.assignmentStatus === 'Assigned' && currentDoc.assignmentStatus === 'Unassigned') {
+        const structuralBuffer = new Model({ ...currentDoc.toObject(), ...updateData });
+        await assignLeadByCategory(structuralBuffer);
+        updateData.assignedTo = structuralBuffer.assignedTo;
+        updateData.assignmentStatus = structuralBuffer.assignmentStatus;
+      }
+
+      const updatedItem = await Model.findByIdAndUpdate(
+        id,
+        { $set: updateData },
+        { returnDocument: 'after', runValidators: true }
+      );
+
+      // 4. Fire team synchronization triggers globally to update tracking numbers
+      if (typeof syncUsersToTeamAssign === 'function') {
+        await syncUsersToTeamAssign();
+      }
+
       return res.status(200).json({
         success: true,
         message: `${modelName} updated successfully`,
@@ -118,6 +140,9 @@ const createCrudOperations = (Model, modelName) => ({
       });
     } catch (error) {
       console.error(`Error updating ${modelName}:`, error);
+      if (error.name === 'ValidationError') {
+        return res.status(400).json({ success: false, message: error.message });
+      }
       return res.status(500).json({
         success: false,
         message: 'Internal server error'
@@ -134,6 +159,9 @@ const createCrudOperations = (Model, modelName) => ({
           success: false,
           message: `${modelName} not found`
         });
+      }
+      if (typeof syncUsersToTeamAssign === 'function') {
+        await syncUsersToTeamAssign();
       }
       return res.status(200).json({
         success: true,
