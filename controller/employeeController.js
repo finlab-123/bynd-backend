@@ -24,7 +24,7 @@ export const getEmployeeDashboard = async (req, res) => {
     );
     absoluteTotal = totalCounts.reduce((acc, curr) => acc + curr, 0);
 
-    // 2. Fetch specific state configurations
+    // 2. Fetch specific individual state counts using regex matches
     const statusCounts = await Promise.all(
       targetModels.map(async (model) => {
         try {
@@ -45,24 +45,29 @@ export const getEmployeeDashboard = async (req, res) => {
       })
     );
 
-    // 3. Aggregate results and map operational sub-statuses into 'In Progress' group metrics securely
+    // 3. Aggregate separate counters clean and explicitly
     const totals = statusCounts.reduce(
       (acc, [pending, inProgress, approved, rejected, ringing, callback, docVerified]) => ({
         pending: acc.pending + (pending || 0),
-        // Grouping operational metrics dynamically under In Progress dashboard tracker
-        inProgress: acc.inProgress + (inProgress || 0) + (ringing || 0) + (callback || 0) + (docVerified || 0),
+        inProgress: acc.inProgress + (inProgress || 0),
         approved: acc.approved + (approved || 0),
         rejected: acc.rejected + (rejected || 0),
+        ringing: acc.ringing + (ringing || 0),
+        callback: acc.callback + (callback || 0),
+        documentsVerified: acc.documentsVerified + (docVerified || 0),
       }),
-      { pending: 0, inProgress: 0, approved: 0, rejected: 0 }
+      { pending: 0, inProgress: 0, approved: 0, rejected: 0, ringing: 0, callback: 0, documentsVerified: 0 }
     );
 
     return res.status(200).json({
       success: true,
       data: {
-        total: absoluteTotal, // Absolute sync fallback security 
+        total: absoluteTotal, 
         pending: totals.pending,
         inProgress: totals.inProgress,
+        ringing: totals.ringing,
+        callback: totals.callback,
+        documentsVerified: totals.documentsVerified,
         approved: totals.approved,
         rejected: totals.rejected,
       },
