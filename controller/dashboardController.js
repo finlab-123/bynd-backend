@@ -136,13 +136,32 @@ export const getLeadsByStatus = async (req, res) => {
 export const getLeadsByCategory = async (req, res) => {
   try {
     const { category } = req.params;
+    
+    if (!category) {
+      return res.status(400).json({ message: "Category parameter is required" });
+    }
+
+   
+    const normalizedCategoryRegex = new RegExp(`^${category.trim().replace(/[-\s]/g, '[-\\s]')}$`, 'i');
+
     const allData = await Promise.all(
-      allModels.map(model => model.find({ productCategory: category }).sort({ createdAt: -1 }).lean().catch(() => []))
+      allModels.map(model => 
+        model.find({ productCategory: normalizedCategoryRegex })
+          .sort({ createdAt: -1 })
+          .lean()
+          .catch(() => [])
+      )
     );
-    const leads = allData.flat().filter(Boolean).sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+    
+    const leads = allData
+      .flat()
+      .filter(Boolean)
+      .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
 
     return res.status(200).json({ 
-      message: `Leads with category ${category} fetched`, 
+      message: `Leads with category filter matching '${category}' fetched successfully`, 
+      success: true,
+      count: leads.length,
       data: leads 
     });
   } catch (error) {

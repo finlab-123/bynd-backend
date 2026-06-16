@@ -1,9 +1,7 @@
-// services/assignmentService.js
 import mongoose from 'mongoose';
 import TeamAssignModel from '../model/teamAssign.js';
 
-// Models
-import HomeLoanModel from '../model/loantype/homeloan.js';
+import HomeLoanModel, { allLeadModels } from '../model/loantype/homeloan.js';
 import VehicleLoanModel from '../model/loantype/vehicleloan.js';
 import LoanAgainstPropertyModel from '../model/loantype/loanagainstproperty.js';
 import LoanAgainstShareModel from '../model/loantype/loanagainstshare.js';
@@ -16,15 +14,6 @@ import MutualFundModel from '../model/productAndinsurence/mutualfund.js';
 import LifeInsuranceModel from '../model/productAndinsurence/lifeinsurence.js';
 import GeneralInsuranceModel from '../model/productAndinsurence/generalInsurence.js';
 
-export const allLeadModels = [
-  HomeLoanModel, VehicleLoanModel, LoanAgainstPropertyModel, LoanAgainstShareModel,
-  SupplyChainModel, MedicalLoanModel, EducationLoanModel, CreditCardModel,
-  EquityModel, MutualFundModel, LifeInsuranceModel, GeneralInsuranceModel
-];
-
-/**
- * Finds a lead by ID across all lead models (Required by teamAssignController)
- */
 export const findLeadById = async (projectId) => {
   if (!projectId) return null;
   const id = mongoose.Types.ObjectId.isValid(projectId) ? new mongoose.Types.ObjectId(projectId) : projectId;
@@ -39,10 +28,6 @@ export const findLeadById = async (projectId) => {
   }
   return null;
 };
-
-/**
- * Bridges User ID and TeamAssign ID securely to guarantee dashboard visibility
- */
 export const getAssignedToValuesForEmployee = async (user) => {
   if (!user) return [];
 
@@ -70,18 +55,12 @@ export const getAssignedToValuesForEmployee = async (user) => {
   }
   return finalQueryValues;
 };
-
-/**
- * Limits database overhead by only querying collections matching user specializations.
- * Handles both hyphenated and spaced category matches seamlessly.
- */
 export const getModelsForEmployee = (user) => {
   if (!user || !Array.isArray(user.specialization) || user.specialization.length === 0) {
     console.log("⚠️ No user specialization found. Defaulting to all lead models.");
     return allLeadModels;
   }
 
-  // Dual mapping dictionary configuration to match strings irrespective of spaces or hyphens
   const mapping = {
     'home-loan': HomeLoanModel,
     'home loan': HomeLoanModel,
@@ -137,7 +116,6 @@ export const getModelsForEmployee = (user) => {
   // Dedupes unique models arrays if variations resolve to the same schema file
   return [...new Set(selectedModels)];
 };
-
 /**
  * Automated assignment routing processor based on the round-robin
  * //TODO: Implement the round-robin assignment logic
@@ -241,7 +219,6 @@ export const assignLeadByCategory = async (lead) => {
   const spaced = cleanCategory.replace(/-+/g, ' ');
 
   try {
-    // Find ALL active employees qualified for this specialization
     const candidates = await TeamAssignModel.find({
       status: 'Active',
       $or: [
@@ -254,16 +231,13 @@ export const assignLeadByCategory = async (lead) => {
     console.log(`📊 Found ${candidates.length} specialized agent(s) for broadcast mapping.`);
 
     if (candidates.length > 0) {
-      // Collect target identification strings from all matching candidates
       const assigneeIds = candidates.map(emp => 
         emp.userId ? emp.userId.toString() : emp._id.toString()
       );
 
-      // 🌟 STEP 1: Store the entire collection of IDs as an array on the single document
       lead.assignedTo = assigneeIds; 
       lead.assignmentStatus = 'Assigned';
 
-      // 🌟 STEP 2: Increment leadCount for all matching employees simultaneously in one database hit
       const candidateRecordIds = candidates.map(emp => emp._id);
       await TeamAssignModel.updateMany(
         { _id: { $in: candidateRecordIds } },
@@ -283,9 +257,6 @@ export const assignLeadByCategory = async (lead) => {
     return lead;
   }
 };
-/**
- * Safe single employee resolver
- */
 export const resolveAssignedEmployee = async (assignedToField) => {
   if (!assignedToField) return null;
   try {
@@ -301,10 +272,6 @@ export const resolveAssignedEmployee = async (assignedToField) => {
     return null;
   }
 };
-
-/**
- * Auto-syncs registered Auth Users with the TeamAssign collection on startup
- */
 export const syncUsersToTeamAssign = async () => {
   try {
     const UserModel = mongoose.model('user');
@@ -315,7 +282,6 @@ export const syncUsersToTeamAssign = async () => {
     for (const employee of employees) {
       const exists = await TeamAssignModel.findOne({ email: employee.email.toLowerCase().trim() });
 
-      // Ensure we preserve the full clean array structure safely
       const specsArray = Array.isArray(employee.specialization) 
         ? employee.specialization.map(s => s.toLowerCase().trim()) 
         : [String(employee.specialization).toLowerCase().trim()];
@@ -333,7 +299,6 @@ export const syncUsersToTeamAssign = async () => {
           leadCount: 0
         });
       } else {
-        // Update specs array and link references reactively on boot restart
         exists.specialization = specsArray;
         exists.userId = employee._id;
         await exists.save();

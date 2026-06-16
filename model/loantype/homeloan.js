@@ -1,10 +1,21 @@
 import mongoose from 'mongoose';
+import CreditCardModel from '../productAndinsurence/creditcard.js';
+import EquityModel from '../productAndinsurence/equity.js';
+import GeneralInsuranceModel from '../productAndinsurence/generalInsurence.js';
+import LifeInsuranceModel from '../productAndinsurence/lifeinsurence.js';
+import MutualFundModel from '../productAndinsurence/mutualfund.js';
+import EducationLoanModel from './educationloan.js';
+import LoanAgainstPropertyModel from './loanagainstproperty.js';
+import LoanAgainstShareModel from './loanagainstshare.js';
+import MedicalLoanModel from './medicalloan.js';
+import SupplyChainModel from './supplychain.js';
+import VehicleLoanModel from './vehicleloan.js';
 
 const homeloanSchema = new mongoose.Schema({
   productCategory: {
     type: String,
     required: true,
-    default: 'home-loan', 
+    default: 'home loan', 
     lowercase: true,     
     trim: true
   },
@@ -54,4 +65,20 @@ homeloanSchema.index({ productCategory: 1, createdAt: -1 });
 homeloanSchema.index({ email: 1 });
 homeloanSchema.index({ assignedTo: 1 });
 
-export default mongoose.model('homeloan', homeloanSchema, 'homeloans');
+const HomeLoanModel = mongoose.model('homeloan', homeloanSchema, 'homeloans');
+
+export const allLeadModels = [
+  HomeLoanModel,
+  CreditCardModel,
+  EquityModel,
+  GeneralInsuranceModel,
+  LifeInsuranceModel,
+  MutualFundModel,
+  EducationLoanModel,
+  LoanAgainstPropertyModel,
+  LoanAgainstShareModel,
+  MedicalLoanModel,
+  SupplyChainModel,
+  VehicleLoanModel
+];
+export default HomeLoanModel;

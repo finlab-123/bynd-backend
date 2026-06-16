@@ -65,16 +65,20 @@ const createCrudOperations = (Model, modelName) => ({
       if (newItem.productCategory) {
         await assignLeadByCategory(newItem);
       }
+      const savedItem = await newItem.save();
 
       if (typeof syncUsersToTeamAssign === 'function') {
-        await syncUsersToTeamAssign();
+        try {
+          await syncUsersToTeamAssign();
+        } catch (syncError) {
+          console.error("Non-blocking background sync warning:", syncError.message);
+        }
       }
-      await newItem.save();
       
       return res.status(201).json({
         success: true,
         message: `${modelName} created successfully`,
-        data: newItem
+        data: savedItem
       });
     } catch (error) {
       console.error(`Error creating ${modelName}:`, error);
@@ -116,7 +120,11 @@ const createCrudOperations = (Model, modelName) => ({
       );
 
       if (typeof syncUsersToTeamAssign === 'function') {
-        await syncUsersToTeamAssign();
+        try {
+          await syncUsersToTeamAssign();
+        } catch (syncError) {
+          console.error("Non-blocking background sync warning:", syncError.message);
+        }
       }
 
       return res.status(200).json({
@@ -144,7 +152,11 @@ const createCrudOperations = (Model, modelName) => ({
         });
       }
       if (typeof syncUsersToTeamAssign === 'function') {
-        await syncUsersToTeamAssign();
+        try {
+          await syncUsersToTeamAssign();
+        } catch (syncError) {
+          console.error("Non-blocking background sync warning:", syncError.message);
+        }
       }
       return res.status(200).json({
         success: true,

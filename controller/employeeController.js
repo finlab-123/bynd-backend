@@ -144,6 +144,7 @@ export const updateLeadStatus = async (req, res) => {
     if (!status) {
       return res.status(400).json({ success: false, message: 'Status is required' });
     }
+    
     let cleanStatus = status.trim();
     if (/^in[- ]?progress$/i.test(cleanStatus)) {
       cleanStatus = 'In Progress';
@@ -172,16 +173,27 @@ export const updateLeadStatus = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Lead not found or access denied' });
     }
 
+    const originalStatus = lead.status || 'Pending';
+
     targetModel.schema.path('status').validators = []; 
     lead.status = cleanStatus;
 
-    if (remark) {
-      if (!Array.isArray(lead.remarks)) {
-        lead.remarks = [];
-      }
+    if (!Array.isArray(lead.remarks)) {
+      lead.remarks = [];
+    }
+
+    const updaterName = req.user.fullname || 'Employee';
+
+    if (remark && remark.trim() !== "") {
       lead.remarks.push({
-        author: req.user.fullname || 'Employee',
+        author: updaterName,
         text: remark.trim(),
+        createdAt: new Date()
+      });
+    } else if (originalStatus !== cleanStatus) {
+      lead.remarks.push({
+        author: updaterName,
+        text: `"${originalStatus}" -> "${cleanStatus}"`,
         createdAt: new Date()
       });
     }
