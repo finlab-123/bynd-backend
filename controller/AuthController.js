@@ -55,11 +55,17 @@ export const loginlead = async (req, res) => {
         const isProduction = process.env.NODE_ENV === "production";
 
         const cookieOptions = {
-            httpOnly: true,
+            // FIXED: false in development so your local dashboards (js-cookie) can read it
+            httpOnly: isProduction ? true : false, 
             secure: isProduction ? true : false, 
             sameSite: isProduction ? "none" : "lax", 
-            maxAge: 24 * 60 * 60 * 1000 // 1 day
+            maxAge: 24 * 60 * 60 * 1000, // 1 day
+            
+            // FIXED: Overrides the default port restriction block on localhost environments
+            ...( !isProduction && { domain: "localhost" } ),
+            path: "/"
         };
+        
         res.cookie('token', token, cookieOptions);
 
         res.status(200).json({
@@ -71,7 +77,18 @@ export const loginlead = async (req, res) => {
         res.status(500).json({ success: false, message: error.message });
     }
 };
-
+export const logoutlead = (req, res) => {
+    const isProduction = process.env.NODE_ENV === "production";
+    
+    res.clearCookie('token', {
+        httpOnly: isProduction ? true : false,
+        secure: isProduction ? true : false,
+        sameSite: isProduction ? "none" : "lax",
+        ...( !isProduction && { domain: "localhost" } ),
+        path: "/"
+    });
+    res.status(200).json({ success: true, message: 'Logout successful' });
+};
 export const getuser = async (req, res) => {
     try {
         console.log("Authenticated user:", req.user);
@@ -84,13 +101,3 @@ export const getuser = async (req, res) => {
     }
 };
 
-export const logoutlead = (req, res) => {
-    const isProduction = process.env.NODE_ENV === "production";
-    
-    res.clearCookie('token', {
-        httpOnly: true,
-        secure: isProduction ? true : false,
-        sameSite: isProduction ? "none" : "lax"
-    });
-    res.status(200).json({ success: true, message: 'Logout successful' });
-};

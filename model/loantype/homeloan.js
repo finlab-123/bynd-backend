@@ -15,7 +15,7 @@ const homeloanSchema = new mongoose.Schema({
   productCategory: {
     type: String,
     required: true,
-    default: 'home loan', 
+    default: 'home-loan', 
     lowercase: true,     
     trim: true
   },
@@ -43,7 +43,7 @@ const homeloanSchema = new mongoose.Schema({
 
   status: {
     type: String,
-    enum: ['Pending', 'Approved', 'Rejected', 'In Progress'],
+    enum: ['Pending', 'Approved', 'Rejected', 'In Progress', 'Ringing', 'Call Back', 'Documents Verified'],
     default: 'Pending',
   },
   assignmentStatus: {

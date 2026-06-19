@@ -63,29 +63,17 @@ export const getModelsForEmployee = (user) => {
 
   const mapping = {
     'home-loan': HomeLoanModel,
-    'home loan': HomeLoanModel,
     'vehicle-loan': VehicleLoanModel,
-    'vehicle loan': VehicleLoanModel,
     'loan-against-property': LoanAgainstPropertyModel,
-    'loan against property': LoanAgainstPropertyModel,
     'loan-against-share': LoanAgainstShareModel,
-    'loan against share': LoanAgainstShareModel,
     'supply-chain': SupplyChainModel,
-    'supply chain': SupplyChainModel,
-    'supply chain finance': SupplyChainModel,
     'medical-loan': MedicalLoanModel,
-    'medical loan': MedicalLoanModel,
     'education-loan': EducationLoanModel,
-    'education loan': EducationLoanModel,
     'credit-card': CreditCardModel,
-    'credit card': CreditCardModel,
     'equity': EquityModel,
     'mutual-fund': MutualFundModel,
-    'mutual fund': MutualFundModel,
     'life-insurance': LifeInsuranceModel,
-    'life insurance': LifeInsuranceModel,
     'general-insurance': GeneralInsuranceModel,
-    'general insurance': GeneralInsuranceModel
   };
 
   console.log("🎯 Employee Specializations to match:", user.specialization);

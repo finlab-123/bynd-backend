@@ -23,7 +23,7 @@ const loanagainstshareSchema = new mongoose.Schema({
   agree: { type: Boolean, required: true },
   status: {
     type: String,
-    enum: ['Pending', 'Approved', 'Rejected', 'In Progress'],
+    enum: ['Pending', 'Approved', 'Rejected', 'In Progress', 'Ringing', 'Call Back', 'Documents Verified'],
     default: 'Pending',
   },
   assignmentStatus: {
