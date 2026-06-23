@@ -1,19 +1,36 @@
 import fs from "fs";
+import path from "path";
 import crypto from "crypto";
+import { fileURLToPath } from "url";
 import { CompactEncrypt, importSPKI } from "jose";
 
-const SERVER_PUBLIC_PEM = fs.readFileSync(
-  "./config/server-public.pem",
-  "utf8"
-);
+let SERVER_PUBLIC_PEM;
 
-const CLIENT_ID =
-  process.env.RAMFINCORP_CLIENT_ID || "dummy";
+// 1. Resolve environment setup automatically
+if (process.env.RAM_FINCORP_PUBLIC_KEY) {
+  // Production / Render Environment: Read raw public key value from Environment Variable
+  SERVER_PUBLIC_PEM = process.env.RAM_FINCORP_PUBLIC_KEY.replace(/\\n/g, '\n');
+} else {
+  // Local Development: Safe absolute path resolution using ESM meta URLs
+  const __dirname = path.dirname(fileURLToPath(import.meta.url));
+  const localKeyPath = path.resolve(__dirname, "../config/server-public.pem");
 
-const nowSec = () =>
-  Math.floor(Date.now() / 1000);
+  if (fs.existsSync(localKeyPath)) {
+    SERVER_PUBLIC_PEM = fs.readFileSync(localKeyPath, "utf8");
+  } else {
+    console.error("❌ Critical: Public key file 'server-public.pem' is missing from local config/ directory!");
+  }
+}
+
+const CLIENT_ID = process.env.RAMFINCORP_CLIENT_ID || "dummy";
+
+const nowSec = () => Math.floor(Date.now() / 1000);
 
 export const encryptPayload = async (payload) => {
+  if (!SERVER_PUBLIC_PEM) {
+    throw new Error("Encryption failed: Public key certificate is completely uninitialized.");
+  }
+
   const publicKey = await importSPKI(
     SERVER_PUBLIC_PEM,
     "ECDH-ES"
