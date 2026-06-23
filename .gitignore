@@ -15,7 +15,6 @@ uploads/
 
 # Security Keys and Certificates
 *.pem
-config/server-public.pem
 pem_file_testing/
 
 # Logs and Runtime Diagnostics
