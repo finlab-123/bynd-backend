@@ -1,8 +1,11 @@
+import dotenv from "dotenv";
+dotenv.config();
+
 import { connectDB } from "./config/db.js";
 import cookieParser from "cookie-parser";
 import express from "express";
 import cors from "cors";
-import dotenv from "dotenv";
+
 import { dashboardrouter } from "./router/dashboard.js";
 import { bookConsultantRouter } from "./router/bookConsultantRoutes.js";
 import { getInTouchRouter } from "./router/getInTouchRoutes.js";
@@ -14,7 +17,6 @@ import { singlerouter } from "./router/singleuserrouter.js";
 import { authrouter } from "./router/Authuser.js";
 import { ceorouter } from './router/Ceoroute.js';
 import { employeeRouter } from './router/employeeRoutes.js';
-dotenv.config();
 const app = express();
 
 const allowedOrigins = [
@@ -58,6 +60,7 @@ app.use('/api/auth', authrouter);
 app.use('/api/ceo', ceorouter);
 connectDB();
 const PORT = process.env.PORT || 5000;
+
 const server = app.listen(PORT, () => {
   console.log(`Server successfully connected to port ${PORT}`);
 });

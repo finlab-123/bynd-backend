@@ -32,13 +32,35 @@ const SupplyChainSchema = new mongoose.Schema({
     enum: ['Assigned', 'Unassigned'],
     default: 'Unassigned',
   },
+  loanPurpose: {
+  type: String,
+  enum: [
+    "Medical Emergency",
+    "Salary Delay",
+    "Personal Emergency",
+    "Education",
+    "Rent / Bills",
+    "Others"
+  ],
+  default: "Others"
+},
   remarks: [
     {
       author: { type: String, trim: true },
       text: { type: String, trim: true },
       createdAt: { type: Date, default: Date.now },
-    }
+    },
   ],
+salaryMode: {
+  type: String,
+  enum: [
+    "Bank Transfer",
+    "Cash",
+    "Cheque",
+    "UPI"
+  ],
+  default: "Bank Transfer"
+},
   assignedTo: [{ type: String, default: "", trim: true }],
 }, { timestamps: true });
 

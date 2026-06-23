@@ -23,8 +23,6 @@ const educationSchema = new mongoose.Schema({
   loanAmount: { type: Number, default: 0 },
   requiredLoanAmount: { type: Number, default: 0 },
   annualIncome: { type: Number, default: 0 },
-  marketvalue: { type: String, trim: true },
-  propertyDescription: { type: String, trim: true },
   loanType: { type: String, trim: true },
 
   reasonLoanAmount: { type: String, trim: true },
@@ -34,6 +32,18 @@ const educationSchema = new mongoose.Schema({
     enum: ['Pending', 'Approved', 'Rejected', 'In Progress',, 'Ringing', 'Call Back', 'Documents Verified'],
     default: 'Pending',
   },
+  loanPurpose: {
+  type: String,
+  enum: [
+    "Medical Emergency",
+    "Salary Delay",
+    "Personal Emergency",
+    "Education",
+    "Rent / Bills",
+    "Others"
+  ],
+  default: "Others"
+},
   assignmentStatus: {
     type: String,
     enum: ['Assigned', 'Unassigned'],
@@ -46,6 +56,16 @@ const educationSchema = new mongoose.Schema({
       createdAt: { type: Date, default: Date.now },
     },
   ],
+salaryMode: {
+  type: String,
+  enum: [
+    "Bank Transfer",
+    "Cash",
+    "Cheque",
+    "UPI"
+  ],
+  default: "Bank Transfer"
+},
   assignedTo: [{ type: String, default: "", trim: true }],
 }, { timestamps: true });
 

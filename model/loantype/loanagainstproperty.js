@@ -25,6 +25,18 @@ const loanAgainstPropertySchema = new mongoose.Schema({
   propertyDescription: { type: String, trim: true },
   loanType: { type: String, trim: true },
   agree: { type: Boolean, required: true },
+  loanPurpose: {
+  type: String,
+  enum: [
+    "Medical Emergency",
+    "Salary Delay",
+    "Personal Emergency",
+    "Education",
+    "Rent / Bills",
+    "Others"
+  ],
+  default: "Others"
+},
   status: {
     type: String,
     enum: ['Pending', 'Approved', 'Rejected', 'In Progress', 'Ringing', 'Call Back', 'Documents Verified'],
@@ -47,6 +59,16 @@ const loanAgainstPropertySchema = new mongoose.Schema({
       createdAt: { type: Date, default: Date.now },
     },
   ],
+salaryMode: {
+  type: String,
+  enum: [
+    "Bank Transfer",
+    "Cash",
+    "Cheque",
+    "UPI"
+  ],
+  default: "Bank Transfer"
+},
 }, { timestamps: true });
 
 loanAgainstPropertySchema.index({ productCategory: 1, createdAt: -1 });

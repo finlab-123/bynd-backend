@@ -6,7 +6,10 @@ import educationSchema from '../model/loantype/educationloan.js';
 import medicalSchema from '../model/loantype/medicalloan.js';
 import LoanAgainstPropertySchema from '../model/loantype/loanagainstproperty.js';
 import { assignLeadByCategory, syncUsersToTeamAssign } from '../services/assignmentService.js';
-
+import {
+  checkDedupe,
+  createLead
+} from "../services/ramfincorp.service.js";
 const createCrudOperations = (Model, modelName) => ({
   getAll: async (req, res) => {
     try {
@@ -51,30 +54,107 @@ const createCrudOperations = (Model, modelName) => ({
 
   create: async (req, res) => {
     try {
+
       if (req.body.email) {
         const cleanEmail = req.body.email.toLowerCase().trim();
-        const existingItem = await Model.findOne({ email: cleanEmail }).select('_id email');
+
+        const existingItem = await Model.findOne({
+          email: cleanEmail
+        }).select("_id email");
+
         if (existingItem) {
           return res.status(409).json({
             success: false,
-            message: 'Email already exists'
+            message: "Email already exists"
           });
         }
       }
+      if (!req.body.pan || !req.body.phone) {
+        return res.status(400).json({
+          success: false,
+          message: "PAN and Phone are required"
+        });
+      }
+
+      const mobile = req.body.phone
+        .replace(/\D/g, "")
+        .slice(-10);
+
+      const dedupeResponse = await checkDedupe(
+        mobile,
+        req.body.pan
+      );
+
+      console.log("Dedupe Response:", dedupeResponse);
+
+      if (
+        dedupeResponse?.message &&
+        dedupeResponse.message.toLowerCase().includes("fail")
+      ) {
+        return res.status(200).json({
+          success: false,
+          message: dedupeResponse
+        });
+      }
+
+      const ramfincorpPayload = {
+        customer_email: req.body.email,
+        mobile_number: mobile,
+        pancard: req.body.pan,
+
+        loan_purpose: req.body.loanPurpose || "Others",
+
+        employee_type: req.body.employeeType,
+        salary_mode: req.body.salaryMode || "Bank Transfer",
+        monthly_income: Number(req.body.income || 1000),
+        salary_date: 1,
+        pincode: Number(req.body.pincode),
+        user_ip:
+          req.headers["x-forwarded-for"] ||
+          req.socket.remoteAddress ||
+          "127.0.0.1",
+        utm_source: "BYND",
+        consent: true,
+        consent_date_time: new Date().toISOString()
+      };
+
+      console.log(
+        "Ramfincorp Payload:",
+        ramfincorpPayload
+      );
+
+      const leadResponse =
+        await createLead(ramfincorpPayload);
+
+      console.log(
+        "Lead Create Response:",
+        leadResponse
+      );
+
+      if (
+        leadResponse?.message &&
+        leadResponse.message
+          .toLowerCase()
+          .includes("fail")
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Ramfincorp lead creation failed"
+        });
+      }
+
 
       const newItem = new Model(req.body);
-      console.log(`Creating new ${modelName} with data:`, req.body);
 
       if (newItem.productCategory) {
-        console.log(`Checking for product category to assign lead...`);
         await assignLeadByCategory(newItem);
       }
-      
-      console.log(`Lead assignment process completed. Proceeding to save the ${modelName}...`);
-      
-      if (typeof syncUsersToTeamAssign === 'function') {
+
+      if (typeof syncUsersToTeamAssign === "function") {
         await syncUsersToTeamAssign();
       }
+
       await newItem.save();
 
       return res.status(201).json({
@@ -82,17 +162,27 @@ const createCrudOperations = (Model, modelName) => ({
         message: `${modelName} created successfully`,
         data: newItem
       });
+
     } catch (error) {
-      console.error(`Error creating ${modelName}:`, error);
-      if (error.name === 'ValidationError') {
+
+      console.error(
+        `Error creating ${modelName}:`,
+        error?.response?.data || error
+      );
+
+      if (error.name === "ValidationError") {
         return res.status(400).json({
           success: false,
           message: error.message
         });
       }
+
       return res.status(500).json({
         success: false,
-        message: 'Internal server error'
+        message:
+          error?.response?.data?.message ||
+          error.message ||
+          "Internal server error"
       });
     }
   },
@@ -100,7 +190,7 @@ const createCrudOperations = (Model, modelName) => ({
   update: async (req, res) => {
     try {
       const { id } = req.params;
-      
+
       const currentDoc = await Model.findById(id);
       if (!currentDoc) {
         return res.status(404).json({

@@ -15,8 +15,8 @@ const homeloanSchema = new mongoose.Schema({
   productCategory: {
     type: String,
     required: true,
-    default: 'home-loan', 
-    lowercase: true,     
+    default: 'home-loan',
+    lowercase: true,
     trim: true
   },
   firstName: { type: String, required: true, trim: true },
@@ -31,14 +31,24 @@ const homeloanSchema = new mongoose.Schema({
   employeeType: { type: String, required: true },
   city: { type: String, trim: true },
   state: { type: String, required: true },
-  requiredAmount: { type: Number, default: 0 },        
-  requiredLoanAmount: { type: Number, default: 0 },    
-  income: { type: Number, default: 0 },                
-  propertyDescription: { type: String, trim: true },  
-  propertytype: { type: String, trim: true },          
-  marketValue: { type: String, trim: true },           
-  marketvalue: { type: String, trim: true },           
-
+  requiredAmount: { type: Number, default: 0 },
+  requiredLoanAmount: { type: Number, default: 0 },
+  income: { type: Number, default: 0 },
+  propertyDescription: { type: String, trim: true },
+  propertytype: { type: String, trim: true },
+  marketValue: { type: String, trim: true },
+  loanPurpose: {
+    type: String,
+    enum: [
+      "Medical Emergency",
+      "Salary Delay",
+      "Personal Emergency",
+      "Education",
+      "Rent / Bills",
+      "Others"
+    ],
+    default: "Others"
+  },
   agree: { type: Boolean, required: true },
 
   status: {
@@ -58,6 +68,16 @@ const homeloanSchema = new mongoose.Schema({
       createdAt: { type: Date, default: Date.now },
     },
   ],
+  salaryMode: {
+    type: String,
+    enum: [
+      "Bank Transfer",
+      "Cash",
+      "Cheque",
+      "UPI"
+    ],
+    default: "Bank Transfer"
+  },
   assignedTo: [{ type: String, default: "", trim: true }],
 }, { timestamps: true });
 
