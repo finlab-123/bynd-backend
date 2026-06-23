@@ -30,7 +30,7 @@ pem_file_testing/
 .env
 .env.local
 .env.production
-
+Backend/config/server-public.pem
 # Dependency Folders
 node_modules/
 jspm_packages/
