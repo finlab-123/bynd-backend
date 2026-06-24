@@ -57,7 +57,7 @@ export const getAssignedToValuesForEmployee = async (user) => {
 };
 export const getModelsForEmployee = (user) => {
   if (!user || !Array.isArray(user.specialization) || user.specialization.length === 0) {
-    console.log("⚠️ No user specialization found. Defaulting to all lead models.");
+    console.log("No user specialization found. Defaulting to all lead models.");
     return allLeadModels;
   }
 
@@ -76,7 +76,7 @@ export const getModelsForEmployee = (user) => {
     'general-insurance': GeneralInsuranceModel,
   };
 
-  console.log("🎯 Employee Specializations to match:", user.specialization);
+  console.log("Employee Specializations to match:", user.specialization);
 
   const selectedModels = user.specialization
     .map(spec => {
@@ -90,14 +90,14 @@ export const getModelsForEmployee = (user) => {
       }
       
       if (!matchedModel) {
-        console.error(`❌ Mapping key '${cleanKey}' did not resolve to a valid Mongoose Model structure.`);
+        console.error(`Mapping key '${cleanKey}' did not resolve to a valid Mongoose Model structure.`);
       }
       return matchedModel;
     })
     .filter(Boolean);
 
   if (selectedModels.length === 0) {
-    console.log("⚠️ Specialization matching resulted in 0 models. Falling back to allLeadModels.");
+    console.log("Specialization matching resulted in 0 models. Falling back to allLeadModels.");
     return allLeadModels;
   }
 
@@ -110,15 +110,15 @@ export const getModelsForEmployee = (user) => {
  */
 // export const assignLeadByCategory = async (lead) => {
 //   console.log("\n=============================================");
-//   console.log("🚀 [AUTO-ASSIGN SYSTEM] Function triggered!");
+//   console.log("[AUTO-ASSIGN SYSTEM] Function triggered!");
 
 //   if (!lead.productCategory && lead.schema && lead.schema.paths.productCategory) {
 //     lead.productCategory = lead.schema.paths.productCategory.options.default;
-//     console.log("ℹ️ productCategory was missing. Fetched schema default:", lead.productCategory);
+//     console.log("productCategory was missing. Fetched schema default:", lead.productCategory);
 //   }
 
 //   if (!lead || !lead.productCategory) {
-//     console.log("❌ CRITICAL: Exiting assignment immediately because productCategory is completely missing!");
+//     console.log("CRITICAL: Exiting assignment immediately because productCategory is completely missing!");
 //     console.log("=============================================\n");
 //     return lead;
 //   }
@@ -127,7 +127,7 @@ export const getModelsForEmployee = (user) => {
 //   const hyphenated = cleanCategory.replace(/\s+/g, '-');
 //   const spaced = cleanCategory.replace(/-+/g, ' ');
   
-//   console.log(`🔍 Searching teamAssign collection matching parameters: ["${hyphenated}", "${spaced}", "${cleanCategory}"]`);
+//   console.log(`Searching teamAssign collection matching parameters: ["${hyphenated}", "${spaced}", "${cleanCategory}"]`);
 
 //   try {
 //     // 1. Precise check mapping across Array storage fields 
@@ -140,48 +140,48 @@ export const getModelsForEmployee = (user) => {
 //       ]
 //     }).sort({ leadCount: 1 });
 
-//     console.log(`📊 Query Result: Found ${candidates.length} specialized agent(s).`);
+//     console.log(`Query Result: Found ${candidates.length} specialized agent(s).`);
 
 //     // 2. Loose Regex search fallback
 //     if (!candidates.length) {
-//       console.log("⚠️ No direct match found. Running case-insensitive loose regex fallback search...");
+//       console.log("No direct match found. Running case-insensitive loose regex fallback search...");
 //       candidates = await TeamAssignModel.find({
 //         specialization: { $regex: new RegExp(lead.productCategory.trim(), 'i') },
 //         status: 'Active'
 //       }).sort({ leadCount: 1 });
-//       console.log(`📊 Regex Fallback Result: Found ${candidates.length} agent(s).`);
+//       console.log(`Regex Fallback Result: Found ${candidates.length} agent(s).`);
 //     }
 
 //     // 3. Round-robin Fallback (any active team member)
 //     let assignee = candidates[0];
 //     if (!assignee) {
-//       console.log("⚠️ No matching specialized agents. Falling back to fetching ANY active team assignment profile...");
+//       console.log("No matching specialized agents. Falling back to fetching ANY active team assignment profile...");
 //       assignee = await TeamAssignModel.findOne({ status: 'Active' }).sort({ leadCount: 1 });
 //     }
 
 //     if (assignee) {
-//       console.log("🎯 SUCCESS! Assigned lead to Employee:", assignee.fullname);
-//       console.log("🆔 Target Employee Team Record ID (_id):", assignee._id.toString());
-//       console.log("🆔 Target Employee Auth Link ID (userId):", assignee.userId ? assignee.userId.toString() : "MISSING");
+//       console.log("SUCCESS! Assigned lead to Employee:", assignee.fullname);
+//       console.log("Target Employee Team Record ID (_id):", assignee._id.toString());
+//       console.log("Target Employee Auth Link ID (userId):", assignee.userId ? assignee.userId.toString() : "MISSING");
 
 //       // Increment lead count tracker inside team database record
 //       await TeamAssignModel.findByIdAndUpdate(assignee._id, { $inc: { leadCount: 1 } });
-//       console.log(`📈 Incremented leadCount counter for ${assignee.fullname}`);
+//       console.log(`Incremented leadCount counter for ${assignee.fullname}`);
 
 //       // Apply unified string stamps to preserve dashboard querying compatibility
 //       lead.assignedTo = assignee.userId ? assignee.userId.toString() : assignee._id.toString();
 //       lead.assignmentStatus = 'Assigned';
       
-//       console.log("📝 Stamped lead.assignedTo with:", lead.assignedTo);
+//       console.log(" Stamped lead.assignedTo with:", lead.assignedTo);
 //     } else {
-//       console.log("❌ ALL SELECTION METHODS FAILED: The teamAssign collection contains 0 active documents!");
+//       console.log("ALL SELECTION METHODS FAILED: The teamAssign collection contains 0 active documents!");
 //       lead.assignmentStatus = 'Unassigned';
 //     }
 
 //     console.log("=============================================\n");
 //     return lead;
 //   } catch (err) {
-//     console.error('❌ EXCEPTION ERROR inside assignLeadByCategory:', err);
+//     console.error('EXCEPTION ERROR inside assignLeadByCategory:', err);
 //     console.log("=============================================\n");
 //     return lead;
 //   }
@@ -190,15 +190,12 @@ export const getModelsForEmployee = (user) => {
 // for broadcart level assign the lead to all the employee with the same catgeory
 
 export const assignLeadByCategory = async (lead) => {
-  console.log("\n=============================================");
-  console.log("🚀 [ARRAY BROADCAST SYSTEM] Function triggered!");
-
   if (!lead.productCategory && lead.schema && lead.schema.paths.productCategory) {
     lead.productCategory = lead.schema.paths.productCategory.options.default;
   }
 
   if (!lead || !lead.productCategory) {
-    console.log("❌ CRITICAL: productCategory is missing!");
+    console.log("CRITICAL: productCategory is missing!");
     return lead;
   }
 
@@ -216,7 +213,7 @@ export const assignLeadByCategory = async (lead) => {
       ]
     });
 
-    console.log(`📊 Found ${candidates.length} specialized agent(s) for broadcast mapping.`);
+    console.log(`Found ${candidates.length} specialized agent(s) for broadcast mapping.`);
 
     if (candidates.length > 0) {
       const assigneeIds = candidates.map(emp => 
@@ -232,16 +229,16 @@ export const assignLeadByCategory = async (lead) => {
         { $inc: { leadCount: 1 } }
       );
 
-      console.log(`🎯 SUCCESS! Single lead mapped to array of ${candidates.length} agents safely.`);
+      console.log(`SUCCESS! Single lead mapped to array of ${candidates.length} agents safely.`);
     } else {
-      console.log("⚠️ No matching specialized agents found.");
+      console.log("No matching specialized agents found.");
       lead.assignedTo = [];
       lead.assignmentStatus = 'Unassigned';
     }
 
     return lead;
   } catch (err) {
-    console.error('❌ EXCEPTION ERROR inside assignLeadByCategory:', err);
+    console.error('EXCEPTION ERROR inside assignLeadByCategory:', err);
     return lead;
   }
 };
@@ -265,7 +262,7 @@ export const syncUsersToTeamAssign = async () => {
     const UserModel = mongoose.model('user');
     const employees = await UserModel.find({ role: 'employee' });
 
-    console.log(`\n🔄 [DATABASE SYNC] Found ${employees.length} employees in the system.`);
+    console.log(`Found ${employees.length} employees in the system.`);
 
     for (const employee of employees) {
       const exists = await TeamAssignModel.findOne({ email: employee.email.toLowerCase().trim() });
@@ -275,7 +272,7 @@ export const syncUsersToTeamAssign = async () => {
         : [String(employee.specialization).toLowerCase().trim()];
 
       if (!exists) {
-        console.log(`➕ [SYNC] Creating teamAssign record for: ${employee.fullname} (${employee.email})`);
+        console.log(`Creating teamAssign record for: ${employee.fullname} (${employee.email})`);
         
         await TeamAssignModel.create({
           fullname: employee.fullname,
@@ -290,11 +287,11 @@ export const syncUsersToTeamAssign = async () => {
         exists.specialization = specsArray;
         exists.userId = employee._id;
         await exists.save();
-        console.log(`🔗 [SYNC] Synchronized profile arrays and references for: ${employee.fullname}`);
+        console.log(`  Synchronized profile arrays and references for: ${employee.fullname}`);
       }
     }
-    console.log("✅ [DATABASE SYNC] Team assignment records are fully up to date!\n");
+    console.log("  Team assignment records are fully up to date!\n");
   } catch (err) {
-    console.error("❌ Error running database auto-sync:", err.message);
+    console.error("Error running database auto-sync:", err.message);
   }
 };

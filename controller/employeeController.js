@@ -78,7 +78,7 @@ export const getEmployeeDashboard = async (req, res) => {
 export const getEmployeeLeads = async (req, res) => {
   try {
     console.log("\n=============================================");
-    console.log("🔄 [DASHBOARD RELOAD] Employee reloading leads page...");
+    console.log("   [DASHBOARD RELOAD] Employee reloading leads page...");
 
     let { status, page = 1, limit = 10 } = req.query;
     const skip = Math.max(0, Number(page) - 1) * Number(limit);

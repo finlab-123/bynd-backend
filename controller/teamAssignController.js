@@ -74,7 +74,7 @@ export const addnewemployee = async (req, res) => {
       status: status || "Active",
     });
 
-    console.log("✅ SUCCESS: Employee successfully registered in teamAssign database!");
+    console.log(" SUCCESS: Employee successfully registered in teamAssign database!");
     console.log("🗃️ Saved Document Record:", JSON.stringify(employee, null, 2));
     console.log("=============================================\n");
 

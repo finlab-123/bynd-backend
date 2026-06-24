@@ -6,19 +6,16 @@ import { CompactEncrypt, importSPKI } from "jose";
 
 let SERVER_PUBLIC_PEM;
 
-// 1. Resolve environment setup automatically
 if (process.env.RAM_FINCORP_PUBLIC_KEY) {
-  // Production / Render Environment: Read raw public key value from Environment Variable
   SERVER_PUBLIC_PEM = process.env.RAM_FINCORP_PUBLIC_KEY.replace(/\\n/g, '\n');
 } else {
-  // Local Development: Safe absolute path resolution using ESM meta URLs
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
   const localKeyPath = path.resolve(__dirname, "../config/server-public.pem");
 
   if (fs.existsSync(localKeyPath)) {
     SERVER_PUBLIC_PEM = fs.readFileSync(localKeyPath, "utf8");
   } else {
-    console.error("❌ Critical: Public key file 'server-public.pem' is missing from local config/ directory!");
+    console.error("Critical: Public key file 'server-public.pem' is missing from local config/ directory!");
   }
 }
 
