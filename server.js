@@ -20,7 +20,7 @@ import { employeeRouter } from './router/employeeRoutes.js';
 const app = express();
 
 const allowedOrigins = [
-  "https://main-bynd.vercel.app",
+  "https://bynd-main.vercel.app",
   "https://bynd-form.vercel.app",
   "https://frontend-dashboard-one-ashen.vercel.app",
   "https://employee-dashboard-seven-omega.vercel.app",
