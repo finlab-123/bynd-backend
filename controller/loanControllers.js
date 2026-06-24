@@ -88,12 +88,11 @@ const createCrudOperations = (Model, modelName) => ({
       console.log("Dedupe Response:", dedupeResponse);
 
       if (
-        dedupeResponse?.message &&
-        dedupeResponse.message.toLowerCase().includes("fail")
+        dedupeResponse?.message === "Dedup Fail"
       ) {
-        return res.status(200).json({
+        return res.status(409).json({
           success: false,
-          message: dedupeResponse
+          message: dedupeResponse.message && "Lead already exists"
         });
       }
 
